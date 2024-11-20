@@ -5,4 +5,6 @@ namespace Syncify.Application.Interfaces.Services;
 public interface IFriendshipService
 {
     Task<Result<FriendshipResponseDto>> SendFriendRequestAsync(SendFriendshipRequestDto sendFriendshipRequest);
+
+    Task<Result<FriendshipResponseDto>> AcceptFriendRequestAsync(AcceptFriendRequestDto acceptFriendRequest);
 }

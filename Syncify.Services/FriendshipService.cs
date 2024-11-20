@@ -81,4 +81,44 @@ public sealed class FriendshipService(
             HttpStatusCode.BadRequest,
             "Unable to create friend Request.");
     }
+
+    public async Task<Result<FriendshipResponseDto>> AcceptFriendRequestAsync(AcceptFriendRequestDto acceptFriendRequest)
+    {
+        var friendship = await friendshipRepository.GetByIdAsync(acceptFriendRequest.FriendshipId);
+
+        if (friendship == null)
+            return Result<FriendshipResponseDto>.Failure(HttpStatusCode.NotFound, "Friend request not found");
+
+        if (friendship.ReceiverId != acceptFriendRequest.UserId)
+            return Result<FriendshipResponseDto>.Failure(HttpStatusCode.Unauthorized, "Not authorized to accept this friend request");
+
+        if (friendship.FriendshipStatus != FriendshipStatus.Pending)
+            return Result<FriendshipResponseDto>.Failure(HttpStatusCode.BadRequest, "Friend request is not pending");
+
+        friendship.FriendshipStatus = FriendshipStatus.Accepted;
+        friendship.UpdatedAt = DateTimeOffset.Now;
+
+        friendshipRepository.Update(friendship);
+
+        await unitOfWork.SaveChangesAsync();
+
+        // Send notification to requester
+
+        var friendShipWithRequesterAndReceiver =
+            await friendshipRepository.GetBySpecificationAndIdAsync(
+                new FriendshipRequestWithRequesterAndReceiverSpecification(),
+                friendship.Id);
+
+        return Result<FriendshipResponseDto>.Success(new FriendshipResponseDto(
+            string.Concat(
+                friendShipWithRequesterAndReceiver.Requester.FirstName, " ",
+                friendShipWithRequesterAndReceiver.Requester.LastName),
+            string.Concat(friendShipWithRequesterAndReceiver.Receiver.FirstName, " ",
+                friendShipWithRequesterAndReceiver.Receiver.LastName),
+            friendShipWithRequesterAndReceiver.FriendshipStatus.ToString(),
+            friendShipWithRequesterAndReceiver.CreatedAt,
+            friendShipWithRequesterAndReceiver.UpdatedAt
+        ));
+
+    }
 }
