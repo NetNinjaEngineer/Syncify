@@ -25,4 +25,12 @@ public sealed class ApplicationUser : IdentityUser
     public IEnumerable<Friendship> SentFriendRequests { get; set; } = [];
 
     public IEnumerable<Friendship> ReceivedFriendRequests { get; set; } = [];
+
+    // Many followers
+    public ICollection<UserFollower> Followers { get; set; } = new HashSet<UserFollower>();
+
+    // Many followed users
+
+    public ICollection<UserFollower> FollowedUsers { get; set; } = new HashSet<UserFollower>();
+
 }
