@@ -4,6 +4,7 @@ using Syncify.Application;
 using Syncify.Domain.Entities.Identity;
 using Syncify.Infrastructure;
 using Syncify.Infrastructure.Persistence;
+using Syncify.Persistence;
 using Syncify.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,7 +19,8 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
 builder.Services
     .AddInfrastructureDependencies(builder.Configuration)
     .AddApplicationDependencies(builder.Configuration)
-    .AddServicesDependencies(builder.Configuration);
+    .AddServicesDependencies(builder.Configuration)
+    .AddPersistenceDependencies(builder.Configuration);
 
 builder.Services.AddGlobalExceptionHandler();
 

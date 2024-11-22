@@ -1,5 +1,6 @@
 ﻿using FluentValidation;
 using Google.Apis.Auth;
+using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -10,6 +11,7 @@ using Syncify.Application.Features.Auth.Commands.SignInGoogle;
 using Syncify.Application.Helpers;
 using Syncify.Application.Interfaces.Services;
 using Syncify.Domain.Entities.Identity;
+using Syncify.Domain.Events;
 using System.Net;
 using System.Text.Json;
 
@@ -20,7 +22,8 @@ public sealed class AuthService(
     ILogger<AuthService> logger,
     IOptions<AuthOptions> authOptions,
     UserManager<ApplicationUser> userManager,
-    SignInManager<ApplicationUser> signInManager) : IAuthService
+    SignInManager<ApplicationUser> signInManager,
+    IMediator mediator) : IAuthService
 {
     private const string CacheKeyPrefix = "GoogleToken_";
     private readonly AuthOptions _authenticationOptions = authOptions.Value;
@@ -41,6 +44,10 @@ public sealed class AuthService(
         if (memoryCache.TryGetValue(cacheKey, out GoogleUserProfile? userProfile))
         {
             logger.LogInformation($"Get GoogleUser Info From Cache: {JsonSerializer.Serialize(userProfile)}");
+            await mediator.Publish(
+                new GoogleUserRegisteredEvent(payload.Email, payload.Name),
+                CancellationToken.None);
+
             return Result<GoogleUserProfile?>.Success(userProfile);
         }
 
@@ -63,7 +70,14 @@ public sealed class AuthService(
 
         var existingUser = await userManager.FindByEmailAsync(payload.Email);
 
-        if (existingUser != null) return Result<GoogleUserProfile?>.Success(profile);
+        if (existingUser != null)
+        {
+            await mediator.Publish(
+                new GoogleUserRegisteredEvent(payload.Email, payload.Name),
+                CancellationToken.None);
+
+            return Result<GoogleUserProfile?>.Success(profile);
+        }
 
         existingUser = new ApplicationUser()
         {
@@ -88,7 +102,12 @@ public sealed class AuthService(
             new UserLoginInfo("Google", existingUser.Email, existingUser.FirstName));
 
         if (loginResult.Succeeded)
+        {
+            await mediator.Publish(
+                new GoogleUserRegisteredEvent(payload.Email, payload.Name),
+                CancellationToken.None);
             return Result<GoogleUserProfile?>.Success(profile);
+        }
 
         return Result<GoogleUserProfile?>.Failure(
             statusCode: HttpStatusCode.UnprocessableEntity,

@@ -21,6 +21,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Syncify.Api.IntegrationTest
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Syncify.Services", "Syncify.Services\Syncify.Services.csproj", "{D8A8ECF7-9446-4E89-B70D-28308AC22C94}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Syncify.Persistence", "Syncify.Persistence\Syncify.Persistence.csproj", "{CE1B3868-A1FA-4CA0-BA22-0819B54C106A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -55,6 +57,10 @@ Global
 		{D8A8ECF7-9446-4E89-B70D-28308AC22C94}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D8A8ECF7-9446-4E89-B70D-28308AC22C94}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D8A8ECF7-9446-4E89-B70D-28308AC22C94}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CE1B3868-A1FA-4CA0-BA22-0819B54C106A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CE1B3868-A1FA-4CA0-BA22-0819B54C106A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CE1B3868-A1FA-4CA0-BA22-0819B54C106A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CE1B3868-A1FA-4CA0-BA22-0819B54C106A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -67,5 +73,6 @@ Global
 		{50506DDE-DB40-4398-B61A-68AFCCACB1D7} = {D46F9E2E-6251-4257-B91D-CF5250279AAE}
 		{4489896F-91FE-4719-9F5F-819BCCB7CEF0} = {D46F9E2E-6251-4257-B91D-CF5250279AAE}
 		{D8A8ECF7-9446-4E89-B70D-28308AC22C94} = {99E6BE7D-FEC6-49B6-A8DE-A6319712F63F}
+		{CE1B3868-A1FA-4CA0-BA22-0819B54C106A} = {99E6BE7D-FEC6-49B6-A8DE-A6319712F63F}
 	EndGlobalSection
 EndGlobal
