@@ -63,6 +63,11 @@ public static class DependencyInjection
                 options.ClientSecret = authOptions.GoogleOptions.ClientSecret;
             });
 
+
+        services.Configure<SmtpSettings>(configuration.GetSection(nameof(SmtpSettings)));
+
+        services.AddTransient<IMailService, MailService>();
+
         return services;
     }
 }
