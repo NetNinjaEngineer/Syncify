@@ -1,6 +1,6 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Syncify.Api.Controllers.Base;
+using Syncify.Api.Base;
 using Syncify.Application.Bases;
 using Syncify.Application.DTOs.FriendshipRequests;
 using Syncify.Application.Features.FriendRequests.Commands.AcceptFriendRequest;

@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Syncify.Application.Bases;
 using System.Net;
 
-namespace Syncify.Api.Controllers.Base;
+namespace Syncify.Api.Base;
 [ApiController]
 public class ApiBaseController(IMediator mediator) : ControllerBase
 {

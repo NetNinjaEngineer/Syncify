@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Syncify.Application.Bases;
 using Syncify.Application.DTOs.FriendshipRequests;
 using Syncify.Application.Interfaces.Services;
@@ -7,13 +8,15 @@ using Syncify.Domain.Entities.Identity;
 using Syncify.Domain.Enums;
 using Syncify.Domain.Interfaces;
 using Syncify.Domain.Specifications;
+using Syncify.Infrastructure.Persistence;
 using System.Net;
 
-namespace Syncify.Services;
+namespace Syncify.Services.Services;
 public sealed class FriendshipService(
     IFriendshipRepository friendshipRepository,
     UserManager<ApplicationUser> userManager,
-    IUnitOfWork unitOfWork) : IFriendshipService
+    IUnitOfWork unitOfWork,
+    ApplicationDbContext context) : IFriendshipService
 {
     public async Task<Result<FriendshipResponseDto>> SendFriendRequestAsync(
         SendFriendshipRequestDto sendFriendshipRequest)
@@ -119,6 +122,42 @@ public sealed class FriendshipService(
             friendShipWithRequesterAndReceiver.CreatedAt,
             friendShipWithRequesterAndReceiver.UpdatedAt
         ));
+
+    }
+
+    // must be called by user that have a role user
+    public async Task<Result<bool>> UnfollowUserAsync(string followerId, string followedId)
+    {
+        if (string.Equals(followerId, followedId, StringComparison.CurrentCultureIgnoreCase))
+            return Result<bool>.Failure(HttpStatusCode.BadRequest, "You cannot unfollow yourself.");
+
+        var followerUser = await userManager.FindByIdAsync(followerId);
+
+        var followedUser = await userManager.FindByIdAsync(followedId);
+
+        if (followedUser == null || followerUser == null)
+            return Result<bool>.Failure(HttpStatusCode.NotFound, "User is not exist.");
+
+        // check if its have a follow for this user
+
+        var existingFollowing = await context.UserFollowers.AnyAsync(uf =>
+            uf.FollowedId == followedId && uf.FollowerId == followerId);
+
+        if (!existingFollowing)
+            return Result<bool>.Failure(HttpStatusCode.BadRequest, "there is no following between them");
+
+        var following =
+            context.UserFollowers.FirstOrDefault(uf =>
+                uf.FollowedId == followedId && uf.FollowerId == followerId);
+
+        context.UserFollowers.Remove(following!);
+
+        await unitOfWork.SaveChangesAsync();
+
+        // send real notification
+        // enhance code
+
+        return Result<bool>.Success(true, "Unfollowing user done successfully");
 
     }
 }

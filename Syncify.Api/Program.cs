@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using Syncify.Api.Extensions;
 using Syncify.Application;
 using Syncify.Domain.Entities.Identity;
 using Syncify.Infrastructure;
@@ -16,15 +17,27 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
 
 builder.Services
     .AddInfrastructureDependencies(builder.Configuration)
-    .AddApplicationDependecies()
-    .AddServicesDependecies();
+    .AddApplicationDependencies(builder.Configuration)
+    .AddServicesDependencies(builder.Configuration);
+
+builder.Services.AddGlobalExceptionHandler();
+
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
+{
     app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.UseGlobalExceptionHandler();
 
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 
