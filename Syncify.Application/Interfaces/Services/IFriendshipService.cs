@@ -7,6 +7,4 @@ public interface IFriendshipService
     Task<Result<FriendshipResponseDto>> SendFriendRequestAsync(SendFriendshipRequestDto sendFriendshipRequest);
 
     Task<Result<FriendshipResponseDto>> AcceptFriendRequestAsync(AcceptFriendRequestDto acceptFriendRequest);
-
-    Task<Result<bool>> UnfollowUserAsync(string followerId, string followedId);
 }

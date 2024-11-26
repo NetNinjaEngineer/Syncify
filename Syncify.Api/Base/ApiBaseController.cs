@@ -1,9 +1,11 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Syncify.Application.Attributes;
 using Syncify.Application.Bases;
 using System.Net;
 
 namespace Syncify.Api.Base;
+[ApiKey]
 [ApiController]
 public class ApiBaseController(IMediator mediator) : ControllerBase
 {
@@ -24,6 +26,7 @@ public class ApiBaseController(IMediator mediator) : ControllerBase
             HttpStatusCode.Conflict => new ConflictObjectResult(result),
             HttpStatusCode.NoContent => new NoContentResult(),
             HttpStatusCode.Created => new ObjectResult(result),
-            HttpStatusCode.UnprocessableEntity => new UnprocessableEntityObjectResult(result)
+            HttpStatusCode.UnprocessableEntity => new UnprocessableEntityObjectResult(result),
+            _ => throw new InvalidOperationException()
         };
 }

@@ -68,6 +68,8 @@ public static class DependencyInjection
 
         services.AddTransient<IMailService, MailService>();
 
+        services.AddScoped<IFollowingService, FollowingService>();
+
         return services;
     }
 }

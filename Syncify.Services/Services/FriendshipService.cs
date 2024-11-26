@@ -1,22 +1,19 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Syncify.Application.Bases;
 using Syncify.Application.DTOs.FriendshipRequests;
+using Syncify.Application.Helpers;
 using Syncify.Application.Interfaces.Services;
 using Syncify.Domain.Entities;
 using Syncify.Domain.Entities.Identity;
 using Syncify.Domain.Enums;
 using Syncify.Domain.Interfaces;
 using Syncify.Domain.Specifications;
-using Syncify.Infrastructure.Persistence;
 using System.Net;
 
 namespace Syncify.Services.Services;
 public sealed class FriendshipService(
-    IFriendshipRepository friendshipRepository,
     UserManager<ApplicationUser> userManager,
-    IUnitOfWork unitOfWork,
-    ApplicationDbContext context) : IFriendshipService
+    IUnitOfWork unitOfWork) : IFriendshipService
 {
     public async Task<Result<FriendshipResponseDto>> SendFriendRequestAsync(
         SendFriendshipRequestDto sendFriendshipRequest)
@@ -26,15 +23,18 @@ public sealed class FriendshipService(
         var addressee = await userManager.FindByIdAsync(sendFriendshipRequest.AddresseeId);
 
         if (requester is null || addressee is null)
-            return Result<FriendshipResponseDto>.Failure(HttpStatusCode.NotFound, "User not found");
+            return Result<FriendshipResponseDto>.Failure(
+                HttpStatusCode.NotFound,
+                DomainErrors.Users.UserNotExists);
 
         if (sendFriendshipRequest.AddresseeId == sendFriendshipRequest.RequesterId)
-            return Result<FriendshipResponseDto>.Failure(HttpStatusCode.BadRequest, "Cannot send friend request to yourself");
+            return Result<FriendshipResponseDto>.Failure(
+                HttpStatusCode.Conflict,
+                DomainErrors.Friendship.CanNotSendFriendRequestToYourSelf);
 
 
-        var existingFriendship = await friendshipRepository.GetFriendshipAsync(
-            sendFriendshipRequest.RequesterId,
-            sendFriendshipRequest.AddresseeId);
+        var existingFriendship = await unitOfWork.FriendshipRepository
+            .GetFriendshipAsync(sendFriendshipRequest.RequesterId, sendFriendshipRequest.AddresseeId);
 
         if (existingFriendship is not null)
         {
@@ -42,11 +42,11 @@ public sealed class FriendshipService(
                 HttpStatusCode.BadRequest,
                 existingFriendship.FriendshipStatus switch
                 {
-                    FriendshipStatus.Pending => "Friend request already sent",
-                    FriendshipStatus.Accepted => "Users are already friends",
-                    FriendshipStatus.Blocked => "Unable to send friend request",
-                    FriendshipStatus.Rejected => "Your friendship request rejected",
-                    _ => "Invalid friendship status"
+                    FriendshipStatus.Pending => DomainErrors.Friendship.PendingFriendRequest,
+                    FriendshipStatus.Accepted => DomainErrors.Friendship.AlreadyAcceptedFriendRequest,
+                    FriendshipStatus.Blocked => DomainErrors.Friendship.BlockedFriendRequest,
+                    FriendshipStatus.Rejected => DomainErrors.Friendship.RejectedFriendRequest,
+                    _ => DomainErrors.Friendship.UndefindFriendRequestStatus
                 });
         }
 
@@ -59,105 +59,73 @@ public sealed class FriendshipService(
             UpdatedAt = DateTimeOffset.Now
         };
 
-        var createdFriendship = await friendshipRepository.CreateAsync(friendShip);
+        var createdFriendship = await unitOfWork.FriendshipRepository.CreateAsync(friendShip);
 
-        var friendShipWithRequesterAndReceiver =
-            await friendshipRepository.GetBySpecificationAndIdAsync(
-                new FriendshipRequestWithRequesterAndReceiverSpecification(),
-                createdFriendship.Id);
+        var fShip =
+            await unitOfWork.FriendshipRepository.GetBySpecificationAndIdAsync(
+                new FriendshipRequestWithRequesterAndReceiverSpecification(), createdFriendship.Id);
 
         await unitOfWork.SaveChangesAsync();
 
-        if (friendShipWithRequesterAndReceiver != null)
-            return Result<FriendshipResponseDto>.Success(new FriendshipResponseDto(
-                string.Concat(
-                    friendShipWithRequesterAndReceiver.Requester.FirstName, " ",
-                    friendShipWithRequesterAndReceiver.Requester.LastName),
-                string.Concat(friendShipWithRequesterAndReceiver.Receiver.FirstName, " ",
-                    friendShipWithRequesterAndReceiver.Receiver.LastName),
-                friendShipWithRequesterAndReceiver.FriendshipStatus.ToString(),
-                friendShipWithRequesterAndReceiver.CreatedAt,
-                friendShipWithRequesterAndReceiver.UpdatedAt
+        if (fShip != null)
+            return Result<FriendshipResponseDto>.Success(
+                new FriendshipResponseDto(
+                string.Concat(fShip.Requester.FirstName, " ", fShip.Requester.LastName),
+                string.Concat(fShip.Receiver.FirstName, " ", fShip.Receiver.LastName),
+                fShip.FriendshipStatus.ToString(),
+                fShip.CreatedAt,
+                fShip.UpdatedAt
             ));
 
         return Result<FriendshipResponseDto>.Failure(
             HttpStatusCode.BadRequest,
-            "Unable to create friend Request.");
+            DomainErrors.Friendship.UnableToCreateFriendRequest);
     }
 
     public async Task<Result<FriendshipResponseDto>> AcceptFriendRequestAsync(AcceptFriendRequestDto acceptFriendRequest)
     {
-        var friendship = await friendshipRepository.GetByIdAsync(acceptFriendRequest.FriendshipId);
+        var friendship = await unitOfWork.FriendshipRepository.GetByIdAsync(acceptFriendRequest.FriendshipId);
 
         if (friendship == null)
-            return Result<FriendshipResponseDto>.Failure(HttpStatusCode.NotFound, "Friend request not found");
+            return Result<FriendshipResponseDto>.Failure(
+                HttpStatusCode.NotFound,
+                DomainErrors.Friendship.NotFoundFriendRequest);
 
         if (friendship.ReceiverId != acceptFriendRequest.UserId)
-            return Result<FriendshipResponseDto>.Failure(HttpStatusCode.Unauthorized, "Not authorized to accept this friend request");
+            return Result<FriendshipResponseDto>.Failure(
+                HttpStatusCode.Unauthorized,
+                DomainErrors.Friendship.UnauthorizedToAcceptFriendRequest);
 
         if (friendship.FriendshipStatus != FriendshipStatus.Pending)
-            return Result<FriendshipResponseDto>.Failure(HttpStatusCode.BadRequest, "Friend request is not pending");
+            return Result<FriendshipResponseDto>.Failure(
+                HttpStatusCode.BadRequest, DomainErrors.Friendship.FriendRequestMustBePending);
 
         friendship.FriendshipStatus = FriendshipStatus.Accepted;
         friendship.UpdatedAt = DateTimeOffset.Now;
 
-        friendshipRepository.Update(friendship);
+        unitOfWork.FriendshipRepository.Update(friendship);
 
         await unitOfWork.SaveChangesAsync();
 
         // Send notification to requester
 
-        var friendShipWithRequesterAndReceiver =
-            await friendshipRepository.GetBySpecificationAndIdAsync(
+        var fShip = await unitOfWork.FriendshipRepository
+            .GetBySpecificationAndIdAsync(
                 new FriendshipRequestWithRequesterAndReceiverSpecification(),
                 friendship.Id);
 
-        return Result<FriendshipResponseDto>.Success(new FriendshipResponseDto(
-            string.Concat(
-                friendShipWithRequesterAndReceiver.Requester.FirstName, " ",
-                friendShipWithRequesterAndReceiver.Requester.LastName),
-            string.Concat(friendShipWithRequesterAndReceiver.Receiver.FirstName, " ",
-                friendShipWithRequesterAndReceiver.Receiver.LastName),
-            friendShipWithRequesterAndReceiver.FriendshipStatus.ToString(),
-            friendShipWithRequesterAndReceiver.CreatedAt,
-            friendShipWithRequesterAndReceiver.UpdatedAt
-        ));
+        if (fShip is not null)
+        {
+            return Result<FriendshipResponseDto>.Success(new FriendshipResponseDto(
+                string.Concat(fShip.Requester.FirstName, " ", fShip.Requester.LastName),
+                string.Concat(fShip.Receiver.FirstName, " ", fShip.Receiver.LastName),
+                fShip.FriendshipStatus.ToString(),
+                fShip.CreatedAt,
+                fShip.UpdatedAt
+            ));
+        }
 
+        return Result<FriendshipResponseDto>.Failure(HttpStatusCode.BadRequest, DomainErrors.Friendship.NotFoundFriendRequest);
     }
 
-    // must be called by user that have a role user
-    public async Task<Result<bool>> UnfollowUserAsync(string followerId, string followedId)
-    {
-        if (string.Equals(followerId, followedId, StringComparison.CurrentCultureIgnoreCase))
-            return Result<bool>.Failure(HttpStatusCode.BadRequest, "You cannot unfollow yourself.");
-
-        var followerUser = await userManager.FindByIdAsync(followerId);
-
-        var followedUser = await userManager.FindByIdAsync(followedId);
-
-        if (followedUser == null || followerUser == null)
-            return Result<bool>.Failure(HttpStatusCode.NotFound, "User is not exist.");
-
-        // check if its have a follow for this user
-
-        var existingFollowing = await context.UserFollowers.AnyAsync(uf =>
-            uf.FollowedId == followedId && uf.FollowerId == followerId);
-
-        if (!existingFollowing)
-            return Result<bool>.Failure(HttpStatusCode.BadRequest, "there is no following between them");
-
-        var following =
-            context.UserFollowers.FirstOrDefault(uf =>
-                uf.FollowedId == followedId && uf.FollowerId == followerId);
-
-        context.UserFollowers.Remove(following!);
-
-        await unitOfWork.SaveChangesAsync();
-
-        // send real notification
-        // enhance code
-
-        return Result<bool>.Success(true, "Unfollowing user done successfully");
-
-    }
 }

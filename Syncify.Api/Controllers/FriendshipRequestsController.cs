@@ -1,12 +1,14 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Syncify.Api.Base;
+using Syncify.Application.Attributes;
 using Syncify.Application.Bases;
 using Syncify.Application.DTOs.FriendshipRequests;
 using Syncify.Application.Features.FriendRequests.Commands.AcceptFriendRequest;
 using Syncify.Application.Features.FriendRequests.Commands.SendFriendRequest;
 
 namespace Syncify.Api.Controllers;
+[Guard]
 [Route("api/friendRequests")]
 public class FriendshipRequestsController(IMediator mediator) : ApiBaseController(mediator)
 {

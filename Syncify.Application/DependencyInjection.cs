@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Syncify.Application.Filters;
 using Syncify.Application.Helpers;
 using System.Reflection;
 
@@ -23,6 +24,8 @@ public static class DependencyInjection
         });
 
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+
+        services.AddSingleton<ApiKeyFilter>();
 
         return services;
     }

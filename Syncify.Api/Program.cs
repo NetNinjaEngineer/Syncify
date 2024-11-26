@@ -22,17 +22,19 @@ builder.Services
     .AddServicesDependencies(builder.Configuration)
     .AddPersistenceDependencies(builder.Configuration);
 
+builder.Services.AddAuthentication();
+builder.Services.AddAuthorization();
+
 builder.Services.AddGlobalExceptionHandler();
 
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerDocumentation();
 
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerDocumentation();
 }
 
 app.UseGlobalExceptionHandler();

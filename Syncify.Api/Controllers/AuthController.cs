@@ -7,7 +7,6 @@ using Syncify.Application.Features.Auth.Commands.SignInGoogle;
 using Syncify.Application.Helpers;
 
 namespace Syncify.Api.Controllers;
-
 [Route("api/auth")]
 public class AuthController(IMediator mediator) : ApiBaseController(mediator)
 {
