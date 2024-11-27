@@ -27,6 +27,8 @@ public static class DependencyInjection
 
         services.AddSingleton<ApiKeyFilter>();
 
+        services.AddAutoMapper(Assembly.GetExecutingAssembly());
+
         return services;
     }
 }

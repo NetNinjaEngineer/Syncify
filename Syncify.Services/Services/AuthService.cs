@@ -1,4 +1,5 @@
-﻿using FluentValidation;
+﻿using AutoMapper;
+using FluentValidation;
 using Google.Apis.Auth;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
@@ -7,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Syncify.Application.Bases;
 using Syncify.Application.DTOs.Auth;
+using Syncify.Application.Features.Auth.Commands.Register;
 using Syncify.Application.Features.Auth.Commands.SignInGoogle;
 using Syncify.Application.Helpers;
 using Syncify.Application.Interfaces.Services;
@@ -23,7 +25,8 @@ public sealed class AuthService(
     IOptions<AuthOptions> authOptions,
     UserManager<ApplicationUser> userManager,
     SignInManager<ApplicationUser> signInManager,
-    IMediator mediator) : IAuthService
+    IMediator mediator,
+    IMapper mapper) : IAuthService
 {
     private const string CacheKeyPrefix = "GoogleToken_";
     private readonly AuthOptions _authenticationOptions = authOptions.Value;
@@ -113,5 +116,23 @@ public sealed class AuthService(
             statusCode: HttpStatusCode.UnprocessableEntity,
             message: "One or more errors happened when tring to login !!!",
             errors: loginResult.Errors.Select(e => $"{e.Code} : {e.Description}").ToList());
+    }
+
+    public async Task<Result<RegisterResponseDto>> RegisterAsync(RegisterCommand command)
+    {
+        var registerCommandValidator = new RegisterCommandValidator();
+        await registerCommandValidator.ValidateAndThrowAsync(command);
+
+        var user = mapper.Map<ApplicationUser>(command);
+        var result = await userManager.CreateAsync(user, command.Password);
+
+        await userManager.AddToRoleAsync(user, AppConstants.Roles.User);
+
+        return !result.Succeeded
+            ? Result<RegisterResponseDto>.Failure(
+                HttpStatusCode.BadRequest,
+                DomainErrors.Users.UnableToCreateAccount,
+                [result.Errors.Select(e => e.Description).FirstOrDefault() ?? string.Empty])
+            : Result<RegisterResponseDto>.Success(new RegisterResponseDto(user.Id, true));
     }
 }

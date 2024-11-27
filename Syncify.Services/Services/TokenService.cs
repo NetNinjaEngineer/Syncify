@@ -45,4 +45,34 @@ public sealed class TokenService(
 
         return _jwtSecurityTokenHandler.WriteToken(jwtSecurityToken);
     }
+
+    public ClaimsPrincipal? ValidateToken(string token)
+    {
+        var validationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(_jwtSettings.Key)),
+            ValidateIssuer = true,
+            ValidIssuer = _jwtSettings.Issuer,
+            ValidateAudience = true,
+            ValidAudience = _jwtSettings.Audience,
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero
+        };
+
+        try
+        {
+            var principal = _jwtSecurityTokenHandler.ValidateToken(
+                token,
+                validationParameters,
+                out _
+            );
+            return principal;
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
 }

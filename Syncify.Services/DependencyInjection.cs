@@ -1,10 +1,14 @@
 ﻿using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Syncify.Application.Helpers;
 using Syncify.Application.Interfaces.Services;
+using Syncify.Domain.Entities.Identity;
+using Syncify.Infrastructure.Persistence;
 using Syncify.Services.Services;
 using System.Text;
 
@@ -15,6 +19,25 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
+        services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+        {
+            var duration = Convert.ToDouble(configuration["DefaultLockoutMinutes"]);
+            options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(duration);
+            options.Lockout.MaxFailedAccessAttempts = 5;
+            options.Lockout.AllowedForNewUsers = true;
+
+            options.Password.RequiredLength = 8;
+            options.Password.RequireNonAlphanumeric = true;
+            options.Password.RequireDigit = true;
+            options.Password.RequireLowercase = true;
+            options.Password.RequireUppercase = true;
+            options.SignIn.RequireConfirmedEmail = true;
+            options.User.RequireUniqueEmail = true;
+        })
+        .AddEntityFrameworkStores<ApplicationDbContext>()
+        .AddDefaultTokenProviders();
+
+
         services.AddScoped<IFriendshipService, FriendshipService>();
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<IAuthService, AuthService>();
@@ -51,6 +74,18 @@ public static class DependencyInjection
                     ValidateIssuerSigningKey = true,
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Key))
                 };
+
+                options.Events = new JwtBearerEvents()
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+                        var path = context.Request.Path;
+                        if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/signalRHub"))
+                            context.Token = accessToken;
+                        return Task.CompletedTask;
+                    }
+                };
             })
             //.AddFacebook(FacebookDefaults.AuthenticationScheme, options =>
             //{
@@ -69,6 +104,10 @@ public static class DependencyInjection
         services.AddTransient<IMailService, MailService>();
 
         services.AddScoped<IFollowingService, FollowingService>();
+
+        services.AddScoped<ICurrentUser, CurrentUser>();
+
+        services.AddScoped<IRoleService, RoleService>();
 
         return services;
     }
