@@ -1,10 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using MediatR;
+using Syncify.Application.Bases;
+using Syncify.Application.DTOs.Auth;
 
 namespace Syncify.Application.Features.Auth.Commands.LoginUser;
-internal class LoginUserCommand
+public sealed class LoginUserCommand : IRequest<Result<SignInResponseDto>>
 {
+    public string Email { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
 }

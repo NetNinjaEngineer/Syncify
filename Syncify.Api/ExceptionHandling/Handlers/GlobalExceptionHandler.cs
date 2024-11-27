@@ -70,9 +70,7 @@ internal sealed class GlobalExceptionHandler(
                 httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
                 errorResponse.Type = "Internal_Server_Error";
                 errorResponse.Message = "An unexpected error occurred while processing your request.";
-                errorResponse.Detail = environment.IsDevelopment()
-                    ? exception.ToString()
-                    : null;
+                errorResponse.Detail = exception.Message;
                 break;
         }
 

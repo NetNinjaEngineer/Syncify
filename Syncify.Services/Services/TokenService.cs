@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Syncify.Application.Helpers;
@@ -11,7 +12,8 @@ using System.Text;
 namespace Syncify.Services.Services;
 public sealed class TokenService(
     UserManager<ApplicationUser> userManager,
-    IOptions<JwtSettings> jwtOptions) : ITokenService
+    IOptions<JwtSettings> jwtOptions,
+    IConfiguration configuration) : ITokenService
 {
     private readonly JwtSettings _jwtSettings = jwtOptions.Value;
     private readonly JwtSecurityTokenHandler _jwtSecurityTokenHandler = new();
@@ -25,10 +27,16 @@ public sealed class TokenService(
 
         var claims = new[]
         {
-            new Claim(JwtRegisteredClaimNames.Sub, user.UserName!),
+            new Claim(JwtRegisteredClaimNames.Sub, user.UserName ?? string.Empty),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new Claim(JwtRegisteredClaimNames.Email, user.Email!),
-            new Claim(ClaimTypes.NameIdentifier, user.Id)
+            new Claim(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
+            new Claim(ClaimTypes.NameIdentifier, user.Id),
+            new Claim("FullName", $"{user.FirstName} {user.LastName}".Trim()),
+            new Claim("DateOfBirth", user.DateOfBirth.ToString("yyyy-MM-dd")),
+            new Claim("Gender", user.Gender.ToString()),
+            new Claim("ProfilePictureUrl", $"{configuration["BaseApiUrl"]}/Uploads/Images/{user.ProfilePictureUrl}" ?? string.Empty),
+            new Claim("CreatedAt", user.CreatedAt.ToString("O")),
+            new Claim("Bio", user.Bio ?? string.Empty)
         }
             .Union(userClaims)
             .Union(roleClaims);
@@ -46,7 +54,7 @@ public sealed class TokenService(
         return _jwtSecurityTokenHandler.WriteToken(jwtSecurityToken);
     }
 
-    public ClaimsPrincipal? ValidateToken(string token)
+    public Task<ClaimsPrincipal> ValidateToken(string token)
     {
         var validationParameters = new TokenValidationParameters
         {
@@ -61,18 +69,11 @@ public sealed class TokenService(
             ClockSkew = TimeSpan.Zero
         };
 
-        try
-        {
-            var principal = _jwtSecurityTokenHandler.ValidateToken(
-                token,
-                validationParameters,
-                out _
-            );
-            return principal;
-        }
-        catch (Exception)
-        {
-            return null;
-        }
+        var principal = _jwtSecurityTokenHandler.ValidateToken(
+            token,
+            validationParameters,
+            out _
+        );
+        return Task.FromResult(principal);
     }
 }

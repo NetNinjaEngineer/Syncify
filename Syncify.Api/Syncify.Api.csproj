@@ -23,4 +23,8 @@
     <ProjectReference Include="..\Syncify.Services\Syncify.Services.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\Uploads\Images\" />
+  </ItemGroup>
+
 </Project>

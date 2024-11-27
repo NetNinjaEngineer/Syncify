@@ -4,10 +4,14 @@ using Syncify.Application;
 using Syncify.Infrastructure;
 using Syncify.Persistence;
 using Syncify.Services;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(opt =>
+        opt.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+
 builder.Services.AddOpenApi();
 
 builder.Services
@@ -32,6 +36,8 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
     app.UseSwaggerDocumentation();
 }
+
+app.UseStaticFiles();
 
 app.UseGlobalExceptionHandler();
 

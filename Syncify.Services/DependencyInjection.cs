@@ -109,6 +109,8 @@ public static class DependencyInjection
 
         services.AddScoped<IRoleService, RoleService>();
 
+        services.AddScoped<IFileService, FileService>();
+
         return services;
     }
 }
