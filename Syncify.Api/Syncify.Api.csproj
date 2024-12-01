@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>e844d345-e868-4e8c-89be-4bbcdf134270</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.0-rc.2.24474.3" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="7.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Syncify.Infrastructure\Syncify.Infrastructure.csproj" />
+    <ProjectReference Include="..\Syncify.Persistence\Syncify.Persistence.csproj" />
+    <ProjectReference Include="..\Syncify.Services\Syncify.Services.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\Uploads\Other\" />
+    <Folder Include="wwwroot\Uploads\Stories\Images\" />
+    <Folder Include="wwwroot\Uploads\Stories\Videos\" />
+    <Folder Include="wwwroot\Uploads\Videos\" />
+  </ItemGroup>
+
+</Project>

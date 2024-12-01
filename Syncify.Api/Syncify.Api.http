@@ -1,0 +1,6 @@
+@Syncify.Api_HostAddress = https://localhost:7286
+
+GET {{Syncify.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
