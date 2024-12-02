@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using Syncify.Api.Base;
 using Syncify.Application.Attributes;
 using Syncify.Application.Bases;
+using Syncify.Application.DTOs.Conversation;
 using Syncify.Application.DTOs.Messages;
+using Syncify.Application.Features.Conversations.Queries.GetConversationMessages;
 using Syncify.Application.Features.Messages.Commands.SendPrivateMessage;
 using Syncify.Application.Features.Messages.Commands.SendPrivateMessageByCurrentUser;
 using Syncify.Application.Helpers;
@@ -37,5 +39,14 @@ public class MessagesController(IMediator mediator) : ApiBaseController(mediator
     {
         command.Attachments = attachments;
         return CustomResult(await Mediator.Send(command));
+    }
+
+    [HttpGet("get-conversation-messages")]
+    [ProducesResponseType(typeof(Result<ConversationDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<Result<ConversationDto>>> GetConversationMessagesAsync([FromQuery] Guid conversationId)
+    {
+        var conversationQuery = new GetConversationMessagesQuery() { ConversationId = conversationId };
+        return CustomResult(await Mediator.Send(conversationQuery));
     }
 }

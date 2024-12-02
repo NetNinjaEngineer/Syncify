@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 using Syncify.Application.Bases;
+using Syncify.Application.DTOs.Conversation;
 using Syncify.Application.DTOs.Messages;
 using Syncify.Application.Features.Messages.Commands.SendPrivateMessage;
 using Syncify.Application.Features.Messages.Commands.SendPrivateMessageByCurrentUser;
@@ -25,6 +26,64 @@ public sealed class MessageService(
     ICurrentUser currentUser,
     IHubContext<MessageHub, IMessageClient> hubContext) : IMessageService
 {
+    public Task<Result<bool>> DeleteMessageAsync(Guid messageId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<Result<bool>> EditMessageAsync(Guid messageId, string newContent)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task<Result<ConversationDto>> GetConversationMessagesAsync(Guid conversationId, int pageNumber, int pageSize)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task<Result<ConversationDto>> GetConversationMessagesAsync(Guid conversationId)
+    {
+        var specification = new CheckExistedConversationSpecification(conversationId);
+        var existedConversation = await unitOfWork.Repository<Conversation>()!
+            .GetBySpecificationAsync(specification);
+
+        if (existedConversation == null)
+            return Result<ConversationDto>.Failure(HttpStatusCode.NotFound);
+
+        var mappedConversation = mapper.Map<ConversationDto>(existedConversation);
+        return Result<ConversationDto>.Success(mappedConversation);
+    }
+
+    public Task<Result<MessageDto>> GetMessageByIdAsync(Guid messageId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<Result<IEnumerable<MessageDto>>> GetMessagesByDateRangeAsync(DateTimeOffset startDate, DateTimeOffset endDate, Guid? conversationId = null)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<Result<int>> GetUnreadMessageCountAsync(string userId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<Result<ConversationDto>> GetUserConversationsAsync(string userId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<Result<bool>> MarkMessageAsReadAsync(Guid messageId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<Result<IEnumerable<MessageDto>>> SearchMessagesAsync(string searchTerm, Guid? conversationId = null)
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task<Result<MessageDto>> SendPrivateMessageAsync(SendPrivateMessageCommand command)
     {
         if (string.Equals(command.SenderId, command.ReceiverId))
@@ -54,37 +113,40 @@ public sealed class MessageService(
             ConversationId = conversation.Id,
         };
 
+
         if (command.Attachments?.Count() > 0)
         {
             var uploadResults = await fileService.UploadFilesParallelAsync(command.Attachments);
 
             foreach (var result in uploadResults)
             {
-                var attachments = message.Attachments.Select(x =>
-                    new Attachment()
-                    {
-                        Id = Guid.NewGuid(),
-                        AttachmentSize = result.Size,
-                        MessageId = message.Id,
-                        Name = result.SavedFileName,
-                        AttachmentType = Enum.Parse<AttachmentType>(result.Type.ToString()),
-                        Url = result.Url
-                    });
-
-                message.Attachments = [.. attachments];
+                message.Attachments.Add(new Attachment
+                {
+                    Id = Guid.NewGuid(),
+                    AttachmentSize = result.Size,
+                    MessageId = message.Id,
+                    Name = result.SavedFileName,
+                    AttachmentType = Enum.Parse<AttachmentType>(result.Type.ToString()),
+                    Url = result.Url
+                });
             }
         }
 
         unitOfWork.Repository<Message>()?.Create(message);
 
+        conversation.LastMessageAt = message.CreatedAt;
+
+        unitOfWork.Repository<Conversation>()?.Update(conversation);
+
         await unitOfWork.SaveChangesAsync();
 
-        var messageResult = new MessageDto(
+        var messageResult = MessageDto.Create(
             string.Concat(sender.FirstName, " ", sender.LastName),
             string.Concat(receiver.FirstName, " ", receiver.LastName),
             MessageStatus.Delivered,
             message.Content,
-            message.Attachments?.Count > 0 ? mapper.Map<List<AttachmentDto>>(message.Attachments) : []);
+            message.Attachments?.Count > 0 ? mapper.Map<List<AttachmentDto>>(message.Attachments) : [],
+            message.CreatedAt, null);
 
         await hubContext.Clients.User(command.ReceiverId).ReceivePrivateMessage(messageResult);
 
@@ -146,12 +208,13 @@ public sealed class MessageService(
 
         await unitOfWork.SaveChangesAsync();
 
-        var messageResult = new MessageDto(
+        var messageResult = MessageDto.Create(
             string.Concat(sender.FirstName, " ", sender.LastName),
             string.Concat(receiver.FirstName, " ", receiver.LastName),
             MessageStatus.Delivered,
             message.Content,
-            message.Attachments?.Count > 0 ? mapper.Map<List<AttachmentDto>>(message.Attachments) : []);
+            message.Attachments?.Count > 0 ? mapper.Map<List<AttachmentDto>>(message.Attachments) : [],
+            message.CreatedAt, null);
 
         await hubContext.Clients.User(command.ReceiverId).ReceivePrivateMessage(messageResult);
 

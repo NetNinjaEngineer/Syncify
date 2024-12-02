@@ -7,8 +7,10 @@ public sealed class MessageProfile : Profile
 {
     public MessageProfile()
     {
-        CreateMap<Attachment, AttachmentDto>()
-            .ForMember(dest => dest.Size, options => options.MapFrom(src => src.AttachmentSize))
-            .ForMember(dest => dest.Type, options => options.MapFrom(src => src.AttachmentType));
+        CreateMap<Message, MessageDto>()
+            .ForMember(dest => dest.SenderName, options => options.MapFrom(
+                src => string.Concat(src.Conversation.SenderUser.FirstName, " ", src.Conversation.SenderUser.LastName)))
+            .ForMember(dest => dest.ReceiverName, options => options.MapFrom(
+                src => string.Concat(src.Conversation.ReceiverUser.FirstName, " ", src.Conversation.ReceiverUser.LastName)));
     }
 }
