@@ -35,7 +35,7 @@ public static class SpecificationQueryEvaluator
             var orderedQuery = inputQuery.OrderByDescending(firstOrderByExpression);
             foreach (var additionalOrderByExpression in specification.OrderByDescending.Skip(1))
             {
-                orderedQuery = orderedQuery.OrderByDescending(additionalOrderByExpression);
+                orderedQuery = orderedQuery.ThenByDescending(additionalOrderByExpression);
             }
             inputQuery = orderedQuery;
         }

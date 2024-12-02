@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.SignalR;
 using Syncify.Application.Bases;
 using Syncify.Application.DTOs.Conversation;
 using Syncify.Application.DTOs.Messages;
+using Syncify.Application.Features.Conversations.Queries.GetPagedConversationMessages;
 using Syncify.Application.Features.Messages.Commands.SendPrivateMessage;
 using Syncify.Application.Features.Messages.Commands.SendPrivateMessageByCurrentUser;
 using Syncify.Application.Helpers;
@@ -24,7 +25,8 @@ public sealed class MessageService(
     IFileService fileService,
     IMapper mapper,
     ICurrentUser currentUser,
-    IHubContext<MessageHub, IMessageClient> hubContext) : IMessageService
+    IHubContext<MessageHub, IMessageClient> hubContext,
+    IMessageRepository messageRepository) : IMessageService
 {
     public Task<Result<bool>> DeleteMessageAsync(Guid messageId)
     {
@@ -36,16 +38,19 @@ public sealed class MessageService(
         throw new NotImplementedException();
     }
 
-    public async Task<Result<ConversationDto>> GetConversationMessagesAsync(Guid conversationId, int pageNumber, int pageSize)
+    public async Task<Result<ConversationDto>> GetConversationMessagesAsync(GetPagedConversationMessagesQuery query)
     {
-        throw new NotImplementedException();
+        var pagedConversationMessages = await messageRepository.GetPagedConversationMessagesAsync(
+            query.ConversationId, query.PageNumber, query.PageSize);
+        if (pagedConversationMessages == null)
+            return Result<ConversationDto>.Failure(HttpStatusCode.NotFound);
+        var mappedConversationMessages = mapper.Map<ConversationDto>(pagedConversationMessages);
+        return Result<ConversationDto>.Success(mappedConversationMessages);
     }
 
     public async Task<Result<ConversationDto>> GetConversationMessagesAsync(Guid conversationId)
     {
-        var specification = new CheckExistedConversationSpecification(conversationId);
-        var existedConversation = await unitOfWork.Repository<Conversation>()!
-            .GetBySpecificationAsync(specification);
+        var existedConversation = await messageRepository.GetConversationMessagesAsync(conversationId);
 
         if (existedConversation == null)
             return Result<ConversationDto>.Failure(HttpStatusCode.NotFound);
@@ -54,9 +59,16 @@ public sealed class MessageService(
         return Result<ConversationDto>.Success(mappedConversation);
     }
 
-    public Task<Result<MessageDto>> GetMessageByIdAsync(Guid messageId)
+    public async Task<Result<MessageDto>> GetMessageByIdAsync(Guid messageId)
     {
-        throw new NotImplementedException();
+        var specification = new GetExistedMessageSpecification(messageId);
+        var existedMessage = await unitOfWork.Repository<Message>()!.GetBySpecificationAsync(specification);
+
+        if (existedMessage == null)
+            return Result<MessageDto>.Failure(HttpStatusCode.NotFound);
+
+        var mappedMessage = mapper.Map<MessageDto>(existedMessage);
+        return Result<MessageDto>.Success(mappedMessage);
     }
 
     public Task<Result<IEnumerable<MessageDto>>> GetMessagesByDateRangeAsync(DateTimeOffset startDate, DateTimeOffset endDate, Guid? conversationId = null)

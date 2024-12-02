@@ -3,11 +3,10 @@ using Microsoft.AspNetCore.Mvc;
 using Syncify.Api.Base;
 using Syncify.Application.Attributes;
 using Syncify.Application.Bases;
-using Syncify.Application.DTOs.Conversation;
 using Syncify.Application.DTOs.Messages;
-using Syncify.Application.Features.Conversations.Queries.GetConversationMessages;
 using Syncify.Application.Features.Messages.Commands.SendPrivateMessage;
 using Syncify.Application.Features.Messages.Commands.SendPrivateMessageByCurrentUser;
+using Syncify.Application.Features.Messages.Queries.GetMessageById;
 using Syncify.Application.Helpers;
 
 namespace Syncify.Api.Controllers;
@@ -41,12 +40,12 @@ public class MessagesController(IMediator mediator) : ApiBaseController(mediator
         return CustomResult(await Mediator.Send(command));
     }
 
-    [HttpGet("get-conversation-messages")]
-    [ProducesResponseType(typeof(Result<ConversationDto>), StatusCodes.Status200OK)]
+    [HttpGet("get-message")]
+    [ProducesResponseType(typeof(Result<MessageDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<Result<ConversationDto>>> GetConversationMessagesAsync([FromQuery] Guid conversationId)
+    public async Task<ActionResult<Result<MessageDto>>> GetMessageByIdAsync([FromQuery] Guid messageId)
     {
-        var conversationQuery = new GetConversationMessagesQuery() { ConversationId = conversationId };
-        return CustomResult(await Mediator.Send(conversationQuery));
+        var getMessageQuery = new GetMessageByIdQuery { MessageId = messageId };
+        return CustomResult(await Mediator.Send(getMessageQuery));
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Syncify.Application.Bases;
 using Syncify.Application.DTOs.Conversation;
 using Syncify.Application.DTOs.Messages;
+using Syncify.Application.Features.Conversations.Queries.GetPagedConversationMessages;
 using Syncify.Application.Features.Messages.Commands.SendPrivateMessage;
 using Syncify.Application.Features.Messages.Commands.SendPrivateMessageByCurrentUser;
 
@@ -10,7 +11,7 @@ public interface IMessageService
     Task<Result<MessageDto>> SendPrivateMessageAsync(SendPrivateMessageCommand command);
     Task<Result<MessageDto>> SendPrivateMessageByCurrentUserAsync(SendPrivateMessageByCurrentUserCommand command);
     // Retrieve message methods
-    Task<Result<ConversationDto>> GetConversationMessagesAsync(Guid conversationId, int pageNumber, int pageSize);
+    Task<Result<ConversationDto>> GetConversationMessagesAsync(GetPagedConversationMessagesQuery query);
     Task<Result<ConversationDto>> GetConversationMessagesAsync(Guid conversationId);
     Task<Result<ConversationDto>> GetUserConversationsAsync(string userId);
     Task<Result<MessageDto>> GetMessageByIdAsync(Guid messageId);
