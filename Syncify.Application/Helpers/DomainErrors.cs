@@ -26,6 +26,7 @@ public static class DomainErrors
     public static class Users
     {
         public const string UserNotExists = "User is not exist.";
+        public const string UserUnauthorized = "You are not authenticated";
 
         public const string UnableToCreateAccount =
             "Some errors happened when creating your account, please try again !!";
@@ -67,6 +68,7 @@ public static class DomainErrors
     public static class Conversation
     {
         public const string ShouldStartConversation = "You should start a conversation first.";
+        public const string CanNotStartConversationToSelf = "You can not start conversation to yourself.";
     }
 
     public static class Messages

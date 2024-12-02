@@ -49,7 +49,7 @@ public sealed class TokenService(
             issuer: _jwtSettings.Issuer,
             audience: _jwtSettings.Audience,
             claims: claims,
-            expires: DateTime.UtcNow.AddDays(_jwtSettings.ExpirationInDays),
+            expires: DateTimeOffset.Now.AddDays(_jwtSettings.ExpirationInDays).UtcDateTime,
             signingCredentials: signingCredentials);
 
         return _jwtSecurityTokenHandler.WriteToken(jwtSecurityToken);

@@ -108,6 +108,8 @@ public static class DependencyInjection
 
         services.AddScoped<IMessageService, MessageService>();
 
+        services.AddScoped<IConversationService, ConversationService>();
+
         return services;
     }
 }

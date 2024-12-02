@@ -29,6 +29,8 @@ public static class DependencyInjection
 
         services.AddAutoMapper(Assembly.GetExecutingAssembly());
 
+        services.AddSingleton<GuardFilter>();
+
         return services;
     }
 }

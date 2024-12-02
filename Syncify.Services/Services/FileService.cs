@@ -30,72 +30,90 @@ public sealed class FileService(
     }
 
     public async Task<IEnumerable<FileUploadResult>> UploadFilesParallelAsync(
-        IEnumerable<IFormFile> files,
-        string? folderName = null,
-        CancellationToken cancellationToken = default)
+      IEnumerable<IFormFile> files,
+      string? folderName = null,
+      CancellationToken cancellationToken = default)
     {
         var formFiles = files.ToList();
-        if (formFiles.Count == 0) return [];
 
-        var locationPath = string.Empty;
+        if (formFiles.Count == 0)
+            return [];
 
-        var uploadResults = formFiles.Select(async file =>
+        var uploadResults = formFiles.Select(file =>
         {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            var fileExtension = Path.GetExtension(file.FileName).ToLower();
-            string directoryPath;
-
-            if (!string.IsNullOrEmpty(folderName))
+            return Task.Run(async () =>
             {
-                directoryPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Uploads", folderName);
-                locationPath = $"/Uploads/{folderName}";
-            }
-            else
-            {
-                var isImage = FileFormats.AllowedImageFormats.Contains(fileExtension);
-                var isVideo = FileFormats.AllowedVideoFormats.Contains(fileExtension);
-                if (isImage)
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var fileExtension = Path.GetExtension(file.FileName).ToLower();
+                string directoryPath = string.Empty;
+                string locationPath = string.Empty;
+
+                try
                 {
-                    directoryPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Uploads", "Images");
-                    locationPath = "/Uploads/Images";
+                    if (!string.IsNullOrEmpty(folderName))
+                    {
+                        directoryPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Uploads", folderName);
+                        locationPath = $"/Uploads/{folderName}";
+                    }
+                    else
+                    {
+                        var isImage = FileFormats.AllowedImageFormats.Contains(fileExtension);
+                        var isVideo = FileFormats.AllowedVideoFormats.Contains(fileExtension);
+                        if (isImage)
+                        {
+                            directoryPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Uploads", "Images");
+                            locationPath = "Uploads/Images";
+                        }
+                        else if (isVideo)
+                        {
+                            directoryPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Uploads", "Videos");
+                            locationPath = "Uploads/Videos";
+                        }
+                        else
+                        {
+                            directoryPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Uploads", "Other");
+                            locationPath = "Uploads/Other";
+                        }
+                    }
+
+                    if (!Directory.Exists(directoryPath))
+                        Directory.CreateDirectory(directoryPath);
+
+                    var uniqueFileName = $"{DateTimeOffset.Now:yyyyMMdd_HHmmssfff}_{file.FileName}";
+                    var fullPathToCreate = Path.Combine(directoryPath, uniqueFileName);
+
+                    await using var fileStream = new FileStream(fullPathToCreate, FileMode.Create, FileAccess.ReadWrite);
+                    await file.CopyToAsync(fileStream, cancellationToken);
+
+                    return new FileUploadResult
+                    {
+                        OriginalFileName = file.FileName,
+                        SavedFileName = uniqueFileName,
+                        Size = file.Length,
+                        Type = GetFileType(fileExtension),
+                        Url = contextAccessor.HttpContext!.Request.IsHttps ?
+                            $"{configuration["BaseApiUrl"]}/{locationPath}/{uniqueFileName}" :
+                            $"{configuration["FullbackUrl"]}/{locationPath}/{uniqueFileName}"
+                    };
                 }
-                else if (isVideo)
+                catch (Exception)
                 {
-                    directoryPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Uploads", "Videos");
-                    locationPath = "/Uploads/Videos";
+                    return new FileUploadResult
+                    {
+                        OriginalFileName = file.FileName,
+                        SavedFileName = string.Empty,
+                        Size = 0,
+                        Url = string.Empty,
+                    };
                 }
-                else
-                {
-                    directoryPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Uploads", "Other");
-                    locationPath = "/Uploads/Other";
-                }
-            }
-
-            var uniqueFileName = $"{DateTimeOffset.Now:yyyyMMdd_HHmmssfff}_{file.FileName}";
-
-            if (!Directory.Exists(directoryPath))
-                Directory.CreateDirectory(directoryPath);
-
-            var fullPathToCreate = Path.Combine(directoryPath, uniqueFileName);
-
-            await using var fileStream = new FileStream(fullPathToCreate, FileMode.Create, FileAccess.ReadWrite);
-            await file.CopyToAsync(fileStream, cancellationToken);
-
-            return new FileUploadResult
-            {
-                OriginalFileName = file.FileName,
-                SavedFileName = uniqueFileName,
-                Size = file.Length,
-                Type = GetFileType(fileExtension),
-                Url = contextAccessor.HttpContext!.Request.IsHttps ?
-                    $"{configuration["BaseApiUrl"]}/{locationPath}/{uniqueFileName}" :
-                    $"{configuration["FullbackUrl"]}/{locationPath}/{uniqueFileName}"
-            };
+            });
         });
+
 
         return await Task.WhenAll(uploadResults);
     }
+
 
     private static FileType GetFileType(string fileExtension)
     {
