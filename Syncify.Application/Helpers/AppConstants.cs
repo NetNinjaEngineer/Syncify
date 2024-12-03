@@ -30,4 +30,9 @@ public sealed class AppConstants
         public const string ClaimAddedSuccessfully = "Claim '{0}:{1}' added successfully to user '{2}'.";
         public const string ClaimAddedToRoleSuccessfully = "Claim '{0}:{1}' added successfully to role '{2}'.";
     }
+
+    public static class Messages
+    {
+        public const string MessageStatusUpdated = "Message status updated successfully.";
+    }
 }

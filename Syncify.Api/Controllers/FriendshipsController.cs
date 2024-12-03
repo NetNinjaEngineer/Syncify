@@ -19,7 +19,7 @@ namespace Syncify.Api.Controllers;
 public class FriendshipsController(IMediator mediator) : ApiBaseController(mediator)
 {
     [Guard(roles: [AppConstants.Roles.User])]
-    [HttpPost("send")]
+    [HttpPost("request")]
     public async Task<ActionResult<Result<FriendshipResponseDto>>> SendFriendshipRequestAsync(SendFriendshipRequestDto request)
         => CustomResult(await Mediator.Send(new SendFriendRequestCommand() { SendFriendshipRequest = request }));
 
@@ -34,33 +34,33 @@ public class FriendshipsController(IMediator mediator) : ApiBaseController(media
     }
 
     [Guard(roles: [AppConstants.Roles.User])]
-    [HttpGet("currentUser/getRequestedFriendships")]
+    [HttpGet("requests/sent")]
     public async Task<ActionResult<Result<IEnumerable<PendingFriendshipRequest>>>>
         GetLoggedInUserRequestedFriendshipsAsync()
         => CustomResult(await Mediator.Send(new GetLoggedInUserRequestedFriendshipsQuery()));
 
     [Guard(roles: [AppConstants.Roles.User])]
-    [HttpGet("currentUser/acceptedFriendships")]
+    [HttpGet("friends")]
     public async Task<ActionResult<Result<IEnumerable<GetUserAcceptedFriendshipDto>>>> GetLoggedInUserAcceptedFriendshipsAsync()
         => CustomResult(await Mediator.Send(new GetLoggedInUserAcceptedFriendshipsQuery()));
 
-    [HttpGet("are-friends")]
+    [HttpGet("check")]
     public async Task<ActionResult<Result<bool>>> AreFriendsAsync([FromQuery] CheckIfAreFriendsQuery request)
         => CustomResult(await Mediator.Send(request));
 
     [Guard(roles: [AppConstants.Roles.User])]
-    [HttpGet("currentUser/are-friends")]
+    [HttpGet("current-user/check")]
     public async Task<ActionResult<Result<bool>>> AreFriendsWithCurrentUserAsync([FromQuery] AreFriendsForCurrentUserQuery request)
         => CustomResult(await Mediator.Send(request));
 
     [Guard(roles: [AppConstants.Roles.User])]
-    [HttpPost("currentUser/send-friendRequest")]
+    [HttpPost("current-user/request")]
     public async Task<ActionResult<Result<FriendshipResponseDto>>> SendFriendshipCurrentUserAsync([FromQuery] CurrentUserSendFriendRequestCommand command)
         => CustomResult(await Mediator.Send(command));
 
     [Guard(roles: [AppConstants.Roles.User])]
-    [HttpPost("{friendRequestId}/currentUser/accept")]
-    public async Task<ActionResult<Result<FriendshipResponseDto>>> AcceptFriendRequestAsync(Guid friendRequestId) =>
+    [HttpPost("{friendRequestId}/current-user/accept")]
+    public async Task<ActionResult<Result<FriendshipResponseDto>>> AcceptFriendRequestCurrentUserAsync(Guid friendRequestId) =>
         CustomResult(await Mediator.Send(
             new CurrentUserAcceptFriendRequestCommand
             {

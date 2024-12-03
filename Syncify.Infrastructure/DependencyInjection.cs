@@ -21,6 +21,8 @@ public static class DependencyInjection
 
         services.AddScoped<IMessageRepository, MessageRepository>();
 
+        services.AddScoped<IConversationRepository, ConversationRepository>();
+
         return services;
     }
 }

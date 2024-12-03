@@ -11,7 +11,11 @@ public sealed class UnitOfWork(
     UserManager<ApplicationUser> userManager) : IUnitOfWork
 {
     private readonly Hashtable _repositories = [];
-    public IFriendshipRepository FriendshipRepository { get; } = new FriendshipRepository(context, userManager);
+    public IFriendshipRepository FriendshipRepository => new FriendshipRepository(context, userManager);
+
+    public IMessageRepository MessageRepository => new MessageRepository(context);
+
+    public IConversationRepository ConversationRepository => new ConversationRepository(context);
 
     public async Task<int> SaveChangesAsync() => await context.SaveChangesAsync();
 

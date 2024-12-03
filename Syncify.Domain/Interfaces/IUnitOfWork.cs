@@ -4,6 +4,8 @@ namespace Syncify.Domain.Interfaces;
 public interface IUnitOfWork : IAsyncDisposable
 {
     IFriendshipRepository FriendshipRepository { get; }
-    Task<int> SaveChangesAsync();
+    IMessageRepository MessageRepository { get; }
+    IConversationRepository ConversationRepository { get; }
     IGenericRepository<TEntity>? Repository<TEntity>() where TEntity : BaseEntity;
+    Task<int> SaveChangesAsync();
 }

@@ -74,5 +74,6 @@ public static class DomainErrors
     public static class Messages
     {
         public const string CanNotSendMessagesToSelf = "You can not send messages to yourself.";
+        public const string MessageNotFound = "Message not found.";
     }
 }

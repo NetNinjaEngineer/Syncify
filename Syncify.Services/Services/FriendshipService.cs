@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Syncify.Application.Bases;
 using Syncify.Application.DTOs.FriendshipRequests;
@@ -20,9 +19,7 @@ namespace Syncify.Services.Services;
 public sealed class FriendshipService(
     UserManager<ApplicationUser> userManager,
     IUnitOfWork unitOfWork,
-    IMediator mediator,
     ICurrentUser currentUser,
-    IFriendshipRepository friendshipRepository,
     IMapper mapper) : IFriendshipService
 {
     public async Task<Result<FriendshipResponseDto>> SendFriendRequestAsync(
@@ -141,25 +138,25 @@ public sealed class FriendshipService(
 
     public async Task<Result<IEnumerable<PendingFriendshipRequest>>> GetLoggedInUserRequestedFriendshipsAsync()
     {
-        var pendingRequests = await friendshipRepository.GetPendingRequestsForReceiverAsync(currentUser.Id);
+        var pendingRequests = await unitOfWork.FriendshipRepository.GetPendingRequestsForReceiverAsync(currentUser.Id);
         var mappedPendingRequests = mapper.Map<IEnumerable<PendingFriendshipRequest>>(pendingRequests);
         return Result<IEnumerable<PendingFriendshipRequest>>.Success(mappedPendingRequests);
     }
 
     public async Task<Result<IEnumerable<GetUserAcceptedFriendshipDto>>> GetLoggedInUserAcceptedFriendshipsAsync()
     {
-        var acceptedFriendships = await friendshipRepository.GetAcceptedFriendshipsForReceiverAsync(currentUser.Id);
+        var acceptedFriendships = await unitOfWork.FriendshipRepository.GetAcceptedFriendshipsForReceiverAsync(currentUser.Id);
         var mappedAcceptedFriendships = mapper.Map<IEnumerable<GetUserAcceptedFriendshipDto>>(acceptedFriendships);
         return Result<IEnumerable<GetUserAcceptedFriendshipDto>>.Success(mappedAcceptedFriendships);
     }
 
     public async Task<Result<bool>> AreFriendsAsync(CheckIfAreFriendsQuery query)
-        => Result<bool>.Success(await friendshipRepository.AreFriendsAsync(query.User1Id, query.User2Id));
+        => Result<bool>.Success(await unitOfWork.FriendshipRepository.AreFriendsAsync(query.User1Id, query.User2Id));
 
     public async Task<Result<bool>> AreFriendsWithCurrentUserAsync(AreFriendsForCurrentUserQuery query)
         => query.FriendId == currentUser.Id ?
             Result<bool>.Failure(HttpStatusCode.Conflict, message: DomainErrors.Friendship.CanNotBeFriendOfYourself) :
-            Result<bool>.Success(await friendshipRepository.AreFriendsAsync(currentUser.Id, query.FriendId));
+            Result<bool>.Success(await unitOfWork.FriendshipRepository.AreFriendsAsync(currentUser.Id, query.FriendId));
 
     public async Task<Result<FriendshipResponseDto>> SendFriendRequestCurrentUserAsync(
         CurrentUserSendFriendRequestCommand command)

@@ -12,14 +12,14 @@ namespace Syncify.Api.Controllers;
 [ApiController]
 public class FollowingsController(IMediator mediator) : ApiBaseController(mediator)
 {
-    [HttpPost("followUser")]
+    [HttpPost("follow")]
     public async Task<ActionResult<Result<bool>>> FollowUserAsync(
         [FromQuery] string followerId,
         [FromQuery] string followedId)
         => CustomResult(
             await Mediator.Send(new FollowUserCommand { FollowerId = followerId, FollowedId = followedId }));
 
-    [HttpPost("unFollowUser")]
+    [HttpPost("unfollow")]
     public async Task<ActionResult<Result<bool>>> UnFollowUserAsync(
         [FromQuery] string followerId,
         [FromQuery] string followedId)

@@ -2,6 +2,8 @@
 using Syncify.Application.DTOs.Conversation;
 using Syncify.Application.DTOs.Messages;
 using Syncify.Application.Features.Conversations.Queries.GetPagedConversationMessages;
+using Syncify.Application.Features.Conversations.Queries.GetUserConversation;
+using Syncify.Application.Features.Messages.Commands.MarkMessageAsRead;
 using Syncify.Application.Features.Messages.Commands.SendPrivateMessage;
 using Syncify.Application.Features.Messages.Commands.SendPrivateMessageByCurrentUser;
 
@@ -13,11 +15,11 @@ public interface IMessageService
     // Retrieve message methods
     Task<Result<ConversationDto>> GetConversationMessagesAsync(GetPagedConversationMessagesQuery query);
     Task<Result<ConversationDto>> GetConversationMessagesAsync(Guid conversationId);
-    Task<Result<ConversationDto>> GetUserConversationsAsync(string userId);
+    Task<Result<ConversationDto>> GetUserConversationsAsync(GetUserConversationQuery query);
     Task<Result<MessageDto>> GetMessageByIdAsync(Guid messageId);
 
     // Message status and management methods
-    Task<Result<bool>> MarkMessageAsReadAsync(Guid messageId);
+    Task<Result<bool>> MarkMessageAsReadAsync(MarkMessageAsReadCommand command);
     Task<Result<int>> GetUnreadMessageCountAsync(string userId);
     Task<Result<bool>> DeleteMessageAsync(Guid messageId);
     Task<Result<bool>> EditMessageAsync(Guid messageId, string newContent);

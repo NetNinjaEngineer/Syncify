@@ -12,7 +12,7 @@ namespace Syncify.Api.Controllers;
 [ApiController]
 public class StoriesController(IMediator mediator) : ApiBaseController(mediator)
 {
-    [HttpPost]
+    [HttpPost("create")]
     [Guard(roles: [AppConstants.Roles.User])]
     public async Task<ActionResult<Result<StoryDto>>> CreateStoryAsync(CreateStoryCommand command)
         => CustomResult(await Mediator.Send(command));

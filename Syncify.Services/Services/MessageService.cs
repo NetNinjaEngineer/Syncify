@@ -5,6 +5,8 @@ using Syncify.Application.Bases;
 using Syncify.Application.DTOs.Conversation;
 using Syncify.Application.DTOs.Messages;
 using Syncify.Application.Features.Conversations.Queries.GetPagedConversationMessages;
+using Syncify.Application.Features.Conversations.Queries.GetUserConversation;
+using Syncify.Application.Features.Messages.Commands.MarkMessageAsRead;
 using Syncify.Application.Features.Messages.Commands.SendPrivateMessage;
 using Syncify.Application.Features.Messages.Commands.SendPrivateMessageByCurrentUser;
 using Syncify.Application.Helpers;
@@ -25,8 +27,7 @@ public sealed class MessageService(
     IFileService fileService,
     IMapper mapper,
     ICurrentUser currentUser,
-    IHubContext<MessageHub, IMessageClient> hubContext,
-    IMessageRepository messageRepository) : IMessageService
+    IHubContext<MessageHub, IMessageClient> hubContext) : IMessageService
 {
     public Task<Result<bool>> DeleteMessageAsync(Guid messageId)
     {
@@ -40,7 +41,7 @@ public sealed class MessageService(
 
     public async Task<Result<ConversationDto>> GetConversationMessagesAsync(GetPagedConversationMessagesQuery query)
     {
-        var pagedConversationMessages = await messageRepository.GetPagedConversationMessagesAsync(
+        var pagedConversationMessages = await unitOfWork.MessageRepository.GetPagedConversationMessagesAsync(
             query.ConversationId, query.PageNumber, query.PageSize);
         if (pagedConversationMessages == null)
             return Result<ConversationDto>.Failure(HttpStatusCode.NotFound);
@@ -50,7 +51,7 @@ public sealed class MessageService(
 
     public async Task<Result<ConversationDto>> GetConversationMessagesAsync(Guid conversationId)
     {
-        var existedConversation = await messageRepository.GetConversationMessagesAsync(conversationId);
+        var existedConversation = await unitOfWork.MessageRepository.GetConversationMessagesAsync(conversationId);
 
         if (existedConversation == null)
             return Result<ConversationDto>.Failure(HttpStatusCode.NotFound);
@@ -62,7 +63,7 @@ public sealed class MessageService(
     public async Task<Result<MessageDto>> GetMessageByIdAsync(Guid messageId)
     {
         var specification = new GetExistedMessageSpecification(messageId);
-        var existedMessage = await unitOfWork.Repository<Message>()!.GetBySpecificationAsync(specification);
+        var existedMessage = await unitOfWork.MessageRepository.GetBySpecificationAsync(specification);
 
         if (existedMessage == null)
             return Result<MessageDto>.Failure(HttpStatusCode.NotFound);
@@ -81,14 +82,30 @@ public sealed class MessageService(
         throw new NotImplementedException();
     }
 
-    public Task<Result<ConversationDto>> GetUserConversationsAsync(string userId)
+    public async Task<Result<ConversationDto>> GetUserConversationsAsync(GetUserConversationQuery query)
     {
-        throw new NotImplementedException();
+        var existedUser = await userManager.FindByIdAsync(query.UserId);
+        if (existedUser == null)
+            return Result<ConversationDto>.Failure(HttpStatusCode.NotFound, DomainErrors.Users.UnkownUser);
+        var conversation = await unitOfWork.ConversationRepository.GetUserConversationsAsync(query.UserId);
+        if (conversation == null)
+            return Result<ConversationDto>.Failure(HttpStatusCode.NotFound);
+        var mappedConversation = mapper.Map<ConversationDto>(conversation);
+        return Result<ConversationDto>.Success(mappedConversation);
     }
 
-    public Task<Result<bool>> MarkMessageAsReadAsync(Guid messageId)
+    public async Task<Result<bool>> MarkMessageAsReadAsync(MarkMessageAsReadCommand command)
     {
-        throw new NotImplementedException();
+        var existedMessage = await unitOfWork.MessageRepository.GetByIdAsync(command.MessageId);
+        if (existedMessage is not null)
+        {
+            existedMessage.MessageStatus = MessageStatus.Read;
+            unitOfWork.MessageRepository.Update(existedMessage);
+            await unitOfWork.SaveChangesAsync();
+            return Result<bool>.Success(true, successMessage: AppConstants.Messages.MessageStatusUpdated);
+        }
+
+        return Result<bool>.Failure(HttpStatusCode.NotFound, DomainErrors.Messages.MessageNotFound);
     }
 
     public Task<Result<IEnumerable<MessageDto>>> SearchMessagesAsync(string searchTerm, Guid? conversationId = null)
@@ -121,7 +138,7 @@ public sealed class MessageService(
         {
             Id = Guid.NewGuid(),
             Content = command.Content,
-            MessageStatus = MessageStatus.Delivered,
+            MessageStatus = MessageStatus.Sent,
             ConversationId = conversation.Id,
         };
 
@@ -155,7 +172,7 @@ public sealed class MessageService(
         var messageResult = MessageDto.Create(
             string.Concat(sender.FirstName, " ", sender.LastName),
             string.Concat(receiver.FirstName, " ", receiver.LastName),
-            MessageStatus.Delivered,
+            MessageStatus.Sent,
             message.Content,
             message.Attachments?.Count > 0 ? mapper.Map<List<AttachmentDto>>(message.Attachments) : [],
             message.CreatedAt, null);
@@ -190,7 +207,7 @@ public sealed class MessageService(
         {
             Id = Guid.NewGuid(),
             Content = command.Content,
-            MessageStatus = MessageStatus.Delivered,
+            MessageStatus = MessageStatus.Sent,
             ConversationId = conversation.Id,
         };
 
@@ -223,7 +240,7 @@ public sealed class MessageService(
         var messageResult = MessageDto.Create(
             string.Concat(sender.FirstName, " ", sender.LastName),
             string.Concat(receiver.FirstName, " ", receiver.LastName),
-            MessageStatus.Delivered,
+            MessageStatus.Sent,
             message.Content,
             message.Attachments?.Count > 0 ? mapper.Map<List<AttachmentDto>>(message.Attachments) : [],
             message.CreatedAt, null);
