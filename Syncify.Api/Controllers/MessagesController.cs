@@ -21,7 +21,7 @@ namespace Syncify.Api.Controllers;
 [Route("api/messages")]
 public class MessagesController(IMediator mediator) : ApiBaseController(mediator)
 {
-    [HttpPost("send")]
+    [HttpPost("private/send")]
     [ProducesResponseType(typeof(Result<MessageDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(Result<MessageDto>), StatusCodes.Status409Conflict)]
     [ProducesResponseType(typeof(Result<MessageDto>), StatusCodes.Status404NotFound)]
@@ -34,7 +34,7 @@ public class MessagesController(IMediator mediator) : ApiBaseController(mediator
     }
 
     [Guard(roles: [AppConstants.Roles.User])]
-    [HttpPost("current-user/send")]
+    [HttpPost("private/current-user/send")]
     [ProducesResponseType(typeof(Result<MessageDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(Result<MessageDto>), StatusCodes.Status409Conflict)]
     [ProducesResponseType(typeof(Result<MessageDto>), StatusCodes.Status404NotFound)]
@@ -46,7 +46,7 @@ public class MessagesController(IMediator mediator) : ApiBaseController(mediator
         return CustomResult(await Mediator.Send(command));
     }
 
-    [HttpGet("details")]
+    [HttpGet("private/details")]
     [ProducesResponseType(typeof(Result<MessageDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<Result<MessageDto>>> GetMessageByIdAsync([FromQuery] Guid messageId)
@@ -55,43 +55,43 @@ public class MessagesController(IMediator mediator) : ApiBaseController(mediator
         return CustomResult(await Mediator.Send(getMessageQuery));
     }
 
-    [HttpPut("mark-as-read")]
+    [HttpPut("private/mark-as-read")]
     public async Task<ActionResult<Result<bool>>> MarkMessageAsReadAsync(
         [FromQuery] MarkMessageAsReadCommand command)
         => CustomResult(await Mediator.Send(command));
 
-    [HttpPut("edit")]
+    [HttpPut("private/edit")]
     public async Task<ActionResult<Result<bool>>> EditMessageAsync(
         [FromQuery] Guid messageId,
         [FromQuery] string NewContent)
         => CustomResult(await Mediator.Send(new EditMessageCommand { MessageId = messageId, NewContent = NewContent }));
 
-    [HttpDelete("delete")]
+    [HttpDelete("private/delete")]
     public async Task<ActionResult<Result<bool>>> DeleteMessageAsync(
         [FromQuery] Guid messageId)
         => CustomResult(await Mediator.Send(new DeleteMessageCommand { MessageId = messageId }));
 
-    [HttpGet("unread-count")]
+    [HttpGet("private/unread-count")]
     [ProducesResponseType(typeof(Result<int>), StatusCodes.Status200OK)]
     public async Task<ActionResult<Result<int>>> GetUnreadMessagesCountAsync([FromQuery] GetUnreadMessagesCountQuery query)
         => CustomResult(await Mediator.Send(query));
 
-    [HttpGet("by-date-range")]
+    [HttpGet("private/by-date-range")]
     [ProducesResponseType(typeof(Result<IEnumerable<MessageDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<Result<IEnumerable<MessageDto>>>> GetMessagesByDateRangeAsync([FromQuery] GetMessagesByDateRangeQuery query)
         => CustomResult(await Mediator.Send(query));
 
-    [HttpGet("unread-messages")]
+    [HttpGet("private/unread-messages")]
     [ProducesResponseType(typeof(Result<IEnumerable<MessageDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<Result<IEnumerable<MessageDto>>>> GetUnreadMessagesAsync([FromQuery] GetUnreadMessagesQuery query)
         => CustomResult(await Mediator.Send(query));
 
-    [HttpGet("search")]
+    [HttpGet("private/search")]
     [ProducesResponseType(typeof(Result<IEnumerable<MessageDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<Result<IEnumerable<MessageDto>>>> SearchMessagesAsync([FromQuery] SearchMessagesQuery query)
         => CustomResult(await Mediator.Send(query));
 
-    [HttpDelete("{conversationId:guid}/{messageId:guid}")]
+    [HttpDelete("private/{conversationId:guid}/{messageId:guid}")]
     public async Task<ActionResult<Result<bool>>> DeleteMessageInConversationAsync(
         [FromRoute] Guid conversationId, [FromRoute] Guid messageId)
       => CustomResult(await Mediator.Send(new DeleteMessageInConversationCommand { MessageId = messageId, ConversationId = conversationId }));

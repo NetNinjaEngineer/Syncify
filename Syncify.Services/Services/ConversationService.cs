@@ -69,7 +69,7 @@ public sealed class ConversationService(
             return Result<string>.Failure(HttpStatusCode.Conflict,
                 DomainErrors.Conversation.CanNotStartConversationToSelf);
 
-        var conversation = new Conversation()
+        var conversation = new PrivateConversation()
         {
             Id = Guid.NewGuid(),
             ReceiverUserId = command.ReceiverId,

@@ -8,7 +8,7 @@ public sealed class ConversationRepository(ApplicationDbContext context) :
 {
     public async Task<Conversation?> GetConversationBetweenAsync(string senderId, string receiverId)
     {
-        return await context.Conversations
+        return await context.Conversations.OfType<PrivateConversation>()
             .AsNoTracking()
             .Include(conversation => conversation.SenderUser)
             .Include(conversation => conversation.ReceiverUser)
@@ -20,7 +20,7 @@ public sealed class ConversationRepository(ApplicationDbContext context) :
 
     public async Task<Conversation?> GetUserConversationsAsync(string userId)
     {
-        var userConversation = await context.Conversations
+        var userConversation = await context.Conversations.OfType<PrivateConversation>()
             .Include(conversation => conversation.SenderUser)
             .Include(conversation => conversation.ReceiverUser)
             .Include(conversation => conversation

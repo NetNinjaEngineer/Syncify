@@ -38,7 +38,7 @@ public sealed class ApplicationUser : IdentityUser
 
     public ICollection<Story> Stories { get; set; } = [];
 
-    public ICollection<Conversation> SentConversations { get; set; } = [];
+    public ICollection<PrivateConversation> SentPrivateConversations { get; set; } = [];
 
-    public ICollection<Conversation> ReceivedConversations { get; set; } = [];
+    public ICollection<PrivateConversation> ReceivedPrivateConversations { get; set; } = [];
 }

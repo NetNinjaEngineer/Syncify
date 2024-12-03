@@ -2,7 +2,7 @@
 
 namespace Syncify.Domain.Specifications;
 
-public sealed class CheckExistedConversationSpecification : BaseSpecification<Conversation>
+public sealed class CheckExistedConversationSpecification : BaseSpecification<PrivateConversation>
 {
     public CheckExistedConversationSpecification(Guid conversationId) : base(c => c.Id == conversationId)
     {

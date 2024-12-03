@@ -45,4 +45,58 @@ public interface IMessageService
     // Search and filtering methods
     Task<Result<IEnumerable<MessageDto>>> SearchMessagesAsync(SearchMessagesQuery searchMessagesQuery);
     Task<Result<IEnumerable<MessageDto>>> GetMessagesByDateRangeAsync(GetMessagesByDateRangeQuery query);
+
+    // Enhanced Private Messaging
+    //Task<Result<MessageDto>> SendPrivateMessageWithAttachmentAsync(SendPrivateMessageWithAttachmentCommand command);
+    //Task<Result<MessageDto>> ReplyToMessageAsync(ReplyToMessageCommand command);
+
+    //// Advanced Conversation Management
+    //Task<Result<ConversationDto>> CreatePrivateConversationAsync(CreatePrivateConversationCommand command);
+    //Task<Result<bool>> UpdateConversationSettingsAsync(UpdateConversationSettingsCommand command);
+    //Task<Result<bool>> MuteConversationAsync(MuteConversationCommand command);
+    //Task<Result<bool>> ArchiveConversationAsync(ArchiveConversationCommand command);
+
+    //// Group Chat Enhancements (Uncommented and expanded)
+    //Task<Result<ConversationDto>> CreateGroupConversationAsync(CreateGroupConversationCommand command);
+    //Task<Result<bool>> AddUserToGroupAsync(AddUserToGroupCommand command);
+    //Task<Result<bool>> RemoveUserFromGroupAsync(RemoveUserFromGroupCommand command);
+    //Task<Result<MessageDto>> SendGroupMessageAsync(SendGroupMessageCommand command);
+    //Task<Result<bool>> UpdateGroupMetadataAsync(UpdateGroupMetadataCommand command);
+
+    //// Message Interaction Features
+    //Task<Result<bool>> ReactToMessageAsync(ReactToMessageCommand command);
+    //Task<Result<IEnumerable<MessageReactionDto>>> GetMessageReactionsAsync(Guid messageId);
+    //Task<Result<bool>> ForwardMessageAsync(ForwardMessageCommand command);
+
+    //// Advanced Search and Filtering
+    //Task<Result<IEnumerable<MessageDto>>> SearchMessagesWithFiltersAsync(SearchMessagesWithFiltersQuery query);
+    //Task<Result<IEnumerable<ConversationDto>>> SearchConversationsAsync(SearchConversationsQuery query);
+
+    //// User Interaction and Privacy
+    //Task<Result<bool>> BlockUserAsync(BlockUserCommand command);
+    //Task<Result<bool>> UnblockUserAsync(UnblockUserCommand command);
+    //Task<Result<IEnumerable<UserDto>>> GetBlockedUsersAsync();
+    //Task<Result<bool>> SetUserPrivacySettingsAsync(SetUserPrivacySettingsCommand command);
+
+    //// Message Media and Rich Content
+    //Task<Result<MessageDto>> SendMessageWithMediaAsync(SendMessageWithMediaCommand command);
+    //Task<Result<IEnumerable<MediaDto>>> GetMessageMediaAsync(Guid messageId);
+
+    //// Message Pinning and Important Messages
+    //Task<Result<bool>> PinMessageInConversationAsync(PinMessageCommand command);
+    //Task<Result<bool>> UnpinMessageInConversationAsync(UnpinMessageCommand command);
+    //Task<Result<IEnumerable<MessageDto>>> GetPinnedMessagesAsync(Guid conversationId);
+
+    //// Conversation Insights and Analytics
+    //Task<Result<ConversationAnalyticsDto>> GetConversationAnalyticsAsync(Guid conversationId);
+    //Task<Result<UserCommunicationStatsDto>> GetUserCommunicationStatsAsync(string userId);
+
+    //// Message Scheduling and Delayed Sending
+    //Task<Result<MessageDto>> ScheduleMessageAsync(ScheduleMessageCommand command);
+    //Task<Result<bool>> CancelScheduledMessageAsync(Guid scheduledMessageId);
+    //Task<Result<IEnumerable<MessageDto>>> GetScheduledMessagesAsync(string userId);
+
+    //// Conversation Export and Backup
+    //Task<Result<string>> ExportConversationAsync(ExportConversationCommand command);
+    //Task<Result<bool>> ImportConversationAsync(ImportConversationCommand command);
 }

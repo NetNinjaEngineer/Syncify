@@ -10,17 +10,12 @@ internal sealed class ConversationConfiguration : IEntityTypeConfiguration<Conve
         builder.HasKey(c => c.Id);
         builder.Property(c => c.Id).ValueGeneratedNever();
 
-        builder.HasOne(c => c.SenderUser)
-            .WithMany(u => u.SentConversations)
-            .HasForeignKey(c => c.SenderUserId)
-            .OnDelete(DeleteBehavior.Restrict)
-            .IsRequired();
+        builder.HasDiscriminator<string>("ConversationType")
+            .HasValue<PrivateConversation>("Private")
+            .HasValue<GroupConversation>("Group");
 
-        builder.HasOne(c => c.ReceiverUser)
-            .WithMany(u => u.ReceivedConversations)
-            .HasForeignKey(c => c.ReceiverUserId)
-            .OnDelete(DeleteBehavior.Restrict)
-            .IsRequired();
+        builder.Property<string>("ConversationType")
+            .HasColumnType("VARCHAR");
 
         builder.ToTable("Conversations");
 

@@ -15,6 +15,9 @@ public sealed class ApplicationDbContext(
     public DbSet<Conversation> Conversations { get; set; } = null!;
     public DbSet<Message> Messages { get; set; } = null!;
     public DbSet<Attachment> Attachments { get; set; } = null!;
+    public DbSet<Group> Groups { get; set; } = null!;
+    public DbSet<GroupMember> GroupMembers { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

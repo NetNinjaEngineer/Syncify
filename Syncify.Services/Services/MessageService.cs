@@ -189,7 +189,7 @@ public sealed class MessageService(
             command.SenderId,
             command.ReceiverId);
 
-        var conversation = await unitOfWork.Repository<Conversation>()!.GetBySpecificationAndIdAsync(specification, command.ConversationId);
+        var conversation = await unitOfWork.Repository<PrivateConversation>()!.GetBySpecificationAndIdAsync(specification, command.ConversationId);
 
         if (conversation == null)
             return Result<MessageDto>.Failure(HttpStatusCode.NotFound,
@@ -258,7 +258,7 @@ public sealed class MessageService(
             currentUser.Id,
             command.ReceiverId);
 
-        var conversation = await unitOfWork.Repository<Conversation>()!.GetBySpecificationAndIdAsync(specification, command.ConversationId);
+        var conversation = await unitOfWork.Repository<PrivateConversation>()!.GetBySpecificationAndIdAsync(specification, command.ConversationId);
 
         if (conversation == null)
             return Result<MessageDto>.Failure(HttpStatusCode.NotFound,

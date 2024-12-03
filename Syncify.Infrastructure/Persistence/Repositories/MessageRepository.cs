@@ -56,7 +56,7 @@ public sealed class MessageRepository(ApplicationDbContext context) :
         if (size < 1) size = 10;
         if (size > 50) size = 50;
 
-        var pagedConversationMessages = await context.Conversations
+        var pagedConversationMessages = await context.Conversations.OfType<PrivateConversation>()
             .Include(
                 c => c.Messages
                 .OrderByDescending(m => m.CreatedAt)
@@ -74,7 +74,7 @@ public sealed class MessageRepository(ApplicationDbContext context) :
     {
         var unreadMessages = await context.Messages
             .AsNoTracking()
-            .Join(context.Conversations,
+            .Join(context.Conversations.OfType<PrivateConversation>(),
                 message => message.ConversationId,
                 conversation => conversation.Id,
                 (message, conversation) => new { Message = message, Conversation = conversation })
@@ -95,7 +95,7 @@ public sealed class MessageRepository(ApplicationDbContext context) :
             .ThenInclude(conversation => conversation.ReceiverUser)
             .Include(message => message.Attachments)
             .Where(message =>
-                message.MessageStatus == MessageStatus.Delivered &&
+                message.MessageStatus == MessageStatus.Sent &&
                 (message.Conversation.SenderUserId == userId || message.Conversation.ReceiverUserId == userId))
             .ToListAsync();
 
@@ -114,7 +114,7 @@ public sealed class MessageRepository(ApplicationDbContext context) :
                 message.Conversation.SenderUserId == userId ||
                 message.Conversation.ReceiverUserId == userId)
             .Where(message =>
-                message.MessageStatus == MessageStatus.Delivered)
+                message.MessageStatus == MessageStatus.Sent)
             .CountAsync();
     }
 
