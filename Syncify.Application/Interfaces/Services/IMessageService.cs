@@ -3,12 +3,14 @@ using Syncify.Application.DTOs.Conversation;
 using Syncify.Application.DTOs.Messages;
 using Syncify.Application.Features.Conversations.Queries.GetPagedConversationMessages;
 using Syncify.Application.Features.Conversations.Queries.GetUserConversation;
+using Syncify.Application.Features.Messages.Commands.DeleteMessageInConversation;
 using Syncify.Application.Features.Messages.Commands.MarkMessageAsRead;
 using Syncify.Application.Features.Messages.Commands.SendPrivateMessage;
 using Syncify.Application.Features.Messages.Commands.SendPrivateMessageByCurrentUser;
 using Syncify.Application.Features.Messages.Queries.GetMessagesByDateRange;
 using Syncify.Application.Features.Messages.Queries.GetUnreadMessages;
 using Syncify.Application.Features.Messages.Queries.GetUnreadMessagesCount;
+using Syncify.Application.Features.Messages.Queries.SearchMessages;
 
 namespace Syncify.Application.Interfaces.Services;
 public interface IMessageService
@@ -26,6 +28,7 @@ public interface IMessageService
     Task<Result<int>> GetUnreadMessageCountAsync(GetUnreadMessagesCountQuery query);
     Task<Result<IEnumerable<MessageDto>>> GetUnreadMessagesAsync(GetUnreadMessagesQuery query);
     Task<Result<bool>> DeleteMessageAsync(Guid messageId);
+    Task<Result<bool>> DeleteMessageInConversationAsync(DeleteMessageInConversationCommand command);
     Task<Result<bool>> EditMessageAsync(Guid messageId, string newContent);
 
     // Group chat methods
@@ -34,16 +37,12 @@ public interface IMessageService
     //Task<bool> RemoveUserFromGroupAsync(Guid conversationId, string userId);
     //Task<MessageDto> SendGroupMessageAsync(SendGroupMessageCommand command);
 
-    // Media and attachment methods
-    //Task<MessageDto> SendMediaMessageAsync(SendMediaMessageCommand command);
-    //Task<IEnumerable<MediaDto>> GetConversationMediaAsync(Guid conversationId);
-
     // Real-time and notification methods
     //Task<bool> BlockUserAsync(string blockedUserId);
     //Task<bool> UnblockUserAsync(string blockedUserId);
     //Task<IEnumerable<UserDto>> GetBlockedUsersAsync();
 
     // Search and filtering methods
-    Task<Result<IEnumerable<MessageDto>>> SearchMessagesAsync(string searchTerm, Guid? conversationId = null);
+    Task<Result<IEnumerable<MessageDto>>> SearchMessagesAsync(SearchMessagesQuery searchMessagesQuery);
     Task<Result<IEnumerable<MessageDto>>> GetMessagesByDateRangeAsync(GetMessagesByDateRangeQuery query);
 }

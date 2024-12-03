@@ -10,4 +10,9 @@ public sealed class GetExistedMessageSpecification : BaseSpecification<Message>
         AddOrderByDescending(m => m.CreatedAt);
         DisableTracking();
     }
+
+    public GetExistedMessageSpecification(Guid messageId, Guid conversationId) : base(m => m.Id == messageId && m.ConversationId == conversationId)
+    {
+        AddIncludes(m => m.Attachments);
+    }
 }

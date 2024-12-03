@@ -4,7 +4,9 @@ using Syncify.Api.Base;
 using Syncify.Application.Attributes;
 using Syncify.Application.Bases;
 using Syncify.Application.DTOs.Conversation;
+using Syncify.Application.Features.Conversations.Commands.DeleteConversation;
 using Syncify.Application.Features.Conversations.Commands.StartConversation;
+using Syncify.Application.Features.Conversations.Queries.GetConversation;
 using Syncify.Application.Features.Conversations.Queries.GetConversationMessages;
 using Syncify.Application.Features.Conversations.Queries.GetPagedConversationMessages;
 using Syncify.Application.Features.Conversations.Queries.GetUserConversation;
@@ -45,4 +47,16 @@ public class ConversationsController(IMediator mediator) : ApiBaseController(med
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<Result<ConversationDto>>> GetUserConversationAsync(
         [FromQuery] GetUserConversationQuery query) => CustomResult(await Mediator.Send(query));
+
+    [HttpGet("between")]
+    [ProducesResponseType(typeof(Result<ConversationDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(Result<ConversationDto>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<Result<ConversationDto>>> GetConversationBetweenAsync(
+        [FromQuery] GetConversationQuery query) => CustomResult(await Mediator.Send(query));
+
+    [HttpDelete]
+    [ProducesResponseType(typeof(Result<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(Result<bool>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<Result<bool>>> DeleteConversationAsync(
+        [FromQuery] DeleteConversationCommand command) => CustomResult(await Mediator.Send(command));
 }

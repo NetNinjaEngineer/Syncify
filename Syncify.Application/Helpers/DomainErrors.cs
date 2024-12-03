@@ -67,8 +67,10 @@ public static class DomainErrors
 
     public static class Conversation
     {
+        public const string ConversationNotExisted = "Conversation with id '{0}' was not existed";
         public const string ShouldStartConversation = "You should start a conversation first.";
         public const string CanNotStartConversationToSelf = "You can not start conversation to yourself.";
+        public const string NoConversationBetweenThem = "There is an existed conversation between {0} and {1}";
     }
 
     public static class Messages

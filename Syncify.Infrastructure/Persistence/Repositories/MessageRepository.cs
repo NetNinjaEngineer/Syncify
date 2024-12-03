@@ -117,4 +117,19 @@ public sealed class MessageRepository(ApplicationDbContext context) :
                 message.MessageStatus == MessageStatus.Delivered)
             .CountAsync();
     }
+
+    public async Task<IEnumerable<Message>> SearchMessagesAsync(
+        string searchTerm, Guid? conversationId = null)
+        => await context.Messages
+            .AsNoTracking()
+            .Include(message => message.Conversation)
+            .ThenInclude(conversation => conversation.SenderUser)
+            .Include(message => message.Conversation)
+            .ThenInclude(conversation => conversation.ReceiverUser)
+            .Include(message => message.Attachments)
+            .Where(message =>
+                !string.IsNullOrEmpty(message.Content) &&
+                message.Content!.ToLower().Contains(searchTerm.ToLower()) &&
+                (!conversationId.HasValue || message.ConversationId == conversationId))
+            .ToListAsync();
 }

@@ -7,12 +7,14 @@ using Syncify.Application.DTOs.Conversation;
 using Syncify.Application.DTOs.Messages;
 using Syncify.Application.Features.Conversations.Queries.GetPagedConversationMessages;
 using Syncify.Application.Features.Conversations.Queries.GetUserConversation;
+using Syncify.Application.Features.Messages.Commands.DeleteMessageInConversation;
 using Syncify.Application.Features.Messages.Commands.MarkMessageAsRead;
 using Syncify.Application.Features.Messages.Commands.SendPrivateMessage;
 using Syncify.Application.Features.Messages.Commands.SendPrivateMessageByCurrentUser;
 using Syncify.Application.Features.Messages.Queries.GetMessagesByDateRange;
 using Syncify.Application.Features.Messages.Queries.GetUnreadMessages;
 using Syncify.Application.Features.Messages.Queries.GetUnreadMessagesCount;
+using Syncify.Application.Features.Messages.Queries.SearchMessages;
 using Syncify.Application.Helpers;
 using Syncify.Application.Hubs;
 using Syncify.Application.Hubs.Interfaces;
@@ -41,6 +43,24 @@ public sealed class MessageService(
         unitOfWork.MessageRepository.Delete(existedMessage);
         await unitOfWork.SaveChangesAsync();
         return Result<bool>.Success(true, AppConstants.Messages.MessageDeleted);
+    }
+
+    public async Task<Result<bool>> DeleteMessageInConversationAsync(DeleteMessageInConversationCommand command)
+    {
+        var existedConversation = await unitOfWork.ConversationRepository.GetByIdAsync(command.ConversationId);
+        if (existedConversation != null)
+        {
+            var specification = new GetExistedMessageSpecification(command.MessageId, command.ConversationId);
+            var existedMessage = await unitOfWork.MessageRepository.GetBySpecificationAsync(specification);
+            if (existedMessage == null)
+                return Result<bool>.Failure(HttpStatusCode.NotFound, DomainErrors.Messages.MessageNotFound);
+            unitOfWork.MessageRepository.Delete(existedMessage);
+            await unitOfWork.SaveChangesAsync();
+            return Result<bool>.Success(true, AppConstants.Messages.MessageDeleted);
+        }
+
+        return Result<bool>.Failure(HttpStatusCode.NotFound,
+            string.Format(DomainErrors.Conversation.ConversationNotExisted, command.ConversationId.ToString()));
     }
 
     public async Task<Result<bool>> EditMessageAsync(Guid messageId, string newContent)
@@ -144,10 +164,14 @@ public sealed class MessageService(
         return Result<bool>.Failure(HttpStatusCode.NotFound, DomainErrors.Messages.MessageNotFound);
     }
 
-    public Task<Result<IEnumerable<MessageDto>>> SearchMessagesAsync(
-        string searchTerm, Guid? conversationId = null)
+    public async Task<Result<IEnumerable<MessageDto>>> SearchMessagesAsync(SearchMessagesQuery searchMessagesQuery)
     {
-        throw new NotImplementedException();
+        var searchedMessages = await unitOfWork.MessageRepository.SearchMessagesAsync(
+            searchTerm: searchMessagesQuery.SearchTerm,
+            conversationId: searchMessagesQuery.ConversationId);
+
+        var mappedResult = mapper.Map<IEnumerable<MessageDto>>(searchedMessages);
+        return Result<IEnumerable<MessageDto>>.Success(mappedResult);
     }
 
     public async Task<Result<MessageDto>> SendPrivateMessageAsync(SendPrivateMessageCommand command)

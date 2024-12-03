@@ -5,6 +5,7 @@ using Syncify.Application.Attributes;
 using Syncify.Application.Bases;
 using Syncify.Application.DTOs.Messages;
 using Syncify.Application.Features.Messages.Commands.DeleteMessage;
+using Syncify.Application.Features.Messages.Commands.DeleteMessageInConversation;
 using Syncify.Application.Features.Messages.Commands.EditMessage;
 using Syncify.Application.Features.Messages.Commands.MarkMessageAsRead;
 using Syncify.Application.Features.Messages.Commands.SendPrivateMessage;
@@ -13,6 +14,7 @@ using Syncify.Application.Features.Messages.Queries.GetMessageById;
 using Syncify.Application.Features.Messages.Queries.GetMessagesByDateRange;
 using Syncify.Application.Features.Messages.Queries.GetUnreadMessages;
 using Syncify.Application.Features.Messages.Queries.GetUnreadMessagesCount;
+using Syncify.Application.Features.Messages.Queries.SearchMessages;
 using Syncify.Application.Helpers;
 
 namespace Syncify.Api.Controllers;
@@ -83,5 +85,15 @@ public class MessagesController(IMediator mediator) : ApiBaseController(mediator
     [ProducesResponseType(typeof(Result<IEnumerable<MessageDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<Result<IEnumerable<MessageDto>>>> GetUnreadMessagesAsync([FromQuery] GetUnreadMessagesQuery query)
         => CustomResult(await Mediator.Send(query));
+
+    [HttpGet("search")]
+    [ProducesResponseType(typeof(Result<IEnumerable<MessageDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<Result<IEnumerable<MessageDto>>>> SearchMessagesAsync([FromQuery] SearchMessagesQuery query)
+        => CustomResult(await Mediator.Send(query));
+
+    [HttpDelete("{conversationId:guid}/{messageId:guid}")]
+    public async Task<ActionResult<Result<bool>>> DeleteMessageInConversationAsync(
+        [FromRoute] Guid conversationId, [FromRoute] Guid messageId)
+      => CustomResult(await Mediator.Send(new DeleteMessageInConversationCommand { MessageId = messageId, ConversationId = conversationId }));
 
 }

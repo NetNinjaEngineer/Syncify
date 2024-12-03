@@ -8,4 +8,5 @@ public interface IMessageRepository : IGenericRepository<Message>
     Task<IEnumerable<Message>> GetMessagesByDateRangeAsync(DateOnly startDate, DateOnly endDate, Guid? conversationId = null);
     Task<int> GetUnreadMessagesCountAsync(string userId);
     Task<IEnumerable<Message>> GetUnreadMessagesAsync(string userId);
+    Task<IEnumerable<Message>> SearchMessagesAsync(string searchTerm, Guid? conversationId = null);
 }
