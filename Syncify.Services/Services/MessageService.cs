@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using FluentValidation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 using Syncify.Application.Bases;
@@ -9,6 +10,9 @@ using Syncify.Application.Features.Conversations.Queries.GetUserConversation;
 using Syncify.Application.Features.Messages.Commands.MarkMessageAsRead;
 using Syncify.Application.Features.Messages.Commands.SendPrivateMessage;
 using Syncify.Application.Features.Messages.Commands.SendPrivateMessageByCurrentUser;
+using Syncify.Application.Features.Messages.Queries.GetMessagesByDateRange;
+using Syncify.Application.Features.Messages.Queries.GetUnreadMessages;
+using Syncify.Application.Features.Messages.Queries.GetUnreadMessagesCount;
 using Syncify.Application.Helpers;
 using Syncify.Application.Hubs;
 using Syncify.Application.Hubs.Interfaces;
@@ -29,14 +33,26 @@ public sealed class MessageService(
     ICurrentUser currentUser,
     IHubContext<MessageHub, IMessageClient> hubContext) : IMessageService
 {
-    public Task<Result<bool>> DeleteMessageAsync(Guid messageId)
+    public async Task<Result<bool>> DeleteMessageAsync(Guid messageId)
     {
-        throw new NotImplementedException();
+        var existedMessage = await unitOfWork.MessageRepository.GetByIdAsync(messageId);
+        if (existedMessage == null)
+            return Result<bool>.Failure(HttpStatusCode.NotFound);
+        unitOfWork.MessageRepository.Delete(existedMessage);
+        await unitOfWork.SaveChangesAsync();
+        return Result<bool>.Success(true, AppConstants.Messages.MessageDeleted);
     }
 
-    public Task<Result<bool>> EditMessageAsync(Guid messageId, string newContent)
+    public async Task<Result<bool>> EditMessageAsync(Guid messageId, string newContent)
     {
-        throw new NotImplementedException();
+        var existedMessage = await unitOfWork.MessageRepository.GetByIdAsync(messageId);
+        if (existedMessage == null)
+            return Result<bool>.Failure(HttpStatusCode.NotFound);
+        existedMessage.Content = newContent;
+        existedMessage.UpdatedAt = DateTimeOffset.Now;
+        unitOfWork.MessageRepository.Update(existedMessage);
+        await unitOfWork.SaveChangesAsync();
+        return Result<bool>.Success(true, AppConstants.Messages.MessageUpdated);
     }
 
     public async Task<Result<ConversationDto>> GetConversationMessagesAsync(GetPagedConversationMessagesQuery query)
@@ -72,14 +88,33 @@ public sealed class MessageService(
         return Result<MessageDto>.Success(mappedMessage);
     }
 
-    public Task<Result<IEnumerable<MessageDto>>> GetMessagesByDateRangeAsync(DateTimeOffset startDate, DateTimeOffset endDate, Guid? conversationId = null)
+    public async Task<Result<IEnumerable<MessageDto>>> GetMessagesByDateRangeAsync(GetMessagesByDateRangeQuery query)
     {
-        throw new NotImplementedException();
+        var messagesInRange = await unitOfWork.MessageRepository.GetMessagesByDateRangeAsync(
+            query.StartDate, query.EndDate, query.ConversationId);
+
+        var mappedMessages = mapper.Map<IEnumerable<MessageDto>>(messagesInRange);
+
+        return Result<IEnumerable<MessageDto>>.Success(mappedMessages);
     }
 
-    public Task<Result<int>> GetUnreadMessageCountAsync(string userId)
+    public async Task<Result<int>> GetUnreadMessageCountAsync(GetUnreadMessagesCountQuery query)
     {
-        throw new NotImplementedException();
+        var validator = new GetUnreadMessagesCountQueryValidator();
+        await validator.ValidateAndThrowAsync(query);
+
+        return Result<int>.Success(await unitOfWork.MessageRepository.GetUnreadMessagesCountAsync(query.UserId));
+    }
+
+    public async Task<Result<IEnumerable<MessageDto>>> GetUnreadMessagesAsync(GetUnreadMessagesQuery query)
+    {
+        var validator = new GetUnreadMessagesQueryValidator();
+        await validator.ValidateAndThrowAsync(query);
+
+        var mappedMessages = mapper.Map<IEnumerable<MessageDto>>(
+            await unitOfWork.MessageRepository.GetUnreadMessagesAsync(query.UserId));
+
+        return Result<IEnumerable<MessageDto>>.Success(mappedMessages);
     }
 
     public async Task<Result<ConversationDto>> GetUserConversationsAsync(GetUserConversationQuery query)
@@ -100,6 +135,7 @@ public sealed class MessageService(
         if (existedMessage is not null)
         {
             existedMessage.MessageStatus = MessageStatus.Read;
+            existedMessage.UpdatedAt = DateTimeOffset.Now;
             unitOfWork.MessageRepository.Update(existedMessage);
             await unitOfWork.SaveChangesAsync();
             return Result<bool>.Success(true, successMessage: AppConstants.Messages.MessageStatusUpdated);
@@ -108,7 +144,8 @@ public sealed class MessageService(
         return Result<bool>.Failure(HttpStatusCode.NotFound, DomainErrors.Messages.MessageNotFound);
     }
 
-    public Task<Result<IEnumerable<MessageDto>>> SearchMessagesAsync(string searchTerm, Guid? conversationId = null)
+    public Task<Result<IEnumerable<MessageDto>>> SearchMessagesAsync(
+        string searchTerm, Guid? conversationId = null)
     {
         throw new NotImplementedException();
     }

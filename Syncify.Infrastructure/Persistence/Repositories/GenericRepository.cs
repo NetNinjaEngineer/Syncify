@@ -4,9 +4,16 @@ using Syncify.Domain.Interfaces;
 using Syncify.Domain.Specifications;
 
 namespace Syncify.Infrastructure.Persistence.Repositories;
-public class GenericRepository<T>(ApplicationDbContext context) : IGenericRepository<T>
+public class GenericRepository<T> : IGenericRepository<T>
     where T : BaseEntity
 {
+    protected readonly ApplicationDbContext context;
+
+    public GenericRepository(ApplicationDbContext context)
+    {
+        this.context = context;
+    }
+
     public async Task<IEnumerable<T>> GetAllAsync()
         => await context.Set<T>().ToListAsync();
 

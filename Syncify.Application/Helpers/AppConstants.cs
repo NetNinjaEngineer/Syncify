@@ -34,5 +34,7 @@ public sealed class AppConstants
     public static class Messages
     {
         public const string MessageStatusUpdated = "Message status updated successfully.";
+        public const string MessageUpdated = "Message updated successfully.";
+        public const string MessageDeleted = "Message deleted successfully.";
     }
 }

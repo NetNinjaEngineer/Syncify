@@ -34,22 +34,22 @@ public class FriendshipsController(IMediator mediator) : ApiBaseController(media
     }
 
     [Guard(roles: [AppConstants.Roles.User])]
-    [HttpGet("requests/sent")]
+    [HttpGet("requests/current-user/sent")]
     public async Task<ActionResult<Result<IEnumerable<PendingFriendshipRequest>>>>
         GetLoggedInUserRequestedFriendshipsAsync()
         => CustomResult(await Mediator.Send(new GetLoggedInUserRequestedFriendshipsQuery()));
 
     [Guard(roles: [AppConstants.Roles.User])]
-    [HttpGet("friends")]
+    [HttpGet("current-user/friends")]
     public async Task<ActionResult<Result<IEnumerable<GetUserAcceptedFriendshipDto>>>> GetLoggedInUserAcceptedFriendshipsAsync()
         => CustomResult(await Mediator.Send(new GetLoggedInUserAcceptedFriendshipsQuery()));
 
-    [HttpGet("check")]
+    [HttpGet("are-friends")]
     public async Task<ActionResult<Result<bool>>> AreFriendsAsync([FromQuery] CheckIfAreFriendsQuery request)
         => CustomResult(await Mediator.Send(request));
 
     [Guard(roles: [AppConstants.Roles.User])]
-    [HttpGet("current-user/check")]
+    [HttpGet("current-user/are-friends")]
     public async Task<ActionResult<Result<bool>>> AreFriendsWithCurrentUserAsync([FromQuery] AreFriendsForCurrentUserQuery request)
         => CustomResult(await Mediator.Send(request));
 

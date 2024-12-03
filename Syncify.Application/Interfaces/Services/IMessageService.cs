@@ -6,6 +6,9 @@ using Syncify.Application.Features.Conversations.Queries.GetUserConversation;
 using Syncify.Application.Features.Messages.Commands.MarkMessageAsRead;
 using Syncify.Application.Features.Messages.Commands.SendPrivateMessage;
 using Syncify.Application.Features.Messages.Commands.SendPrivateMessageByCurrentUser;
+using Syncify.Application.Features.Messages.Queries.GetMessagesByDateRange;
+using Syncify.Application.Features.Messages.Queries.GetUnreadMessages;
+using Syncify.Application.Features.Messages.Queries.GetUnreadMessagesCount;
 
 namespace Syncify.Application.Interfaces.Services;
 public interface IMessageService
@@ -20,7 +23,8 @@ public interface IMessageService
 
     // Message status and management methods
     Task<Result<bool>> MarkMessageAsReadAsync(MarkMessageAsReadCommand command);
-    Task<Result<int>> GetUnreadMessageCountAsync(string userId);
+    Task<Result<int>> GetUnreadMessageCountAsync(GetUnreadMessagesCountQuery query);
+    Task<Result<IEnumerable<MessageDto>>> GetUnreadMessagesAsync(GetUnreadMessagesQuery query);
     Task<Result<bool>> DeleteMessageAsync(Guid messageId);
     Task<Result<bool>> EditMessageAsync(Guid messageId, string newContent);
 
@@ -41,5 +45,5 @@ public interface IMessageService
 
     // Search and filtering methods
     Task<Result<IEnumerable<MessageDto>>> SearchMessagesAsync(string searchTerm, Guid? conversationId = null);
-    Task<Result<IEnumerable<MessageDto>>> GetMessagesByDateRangeAsync(DateTimeOffset startDate, DateTimeOffset endDate, Guid? conversationId = null);
+    Task<Result<IEnumerable<MessageDto>>> GetMessagesByDateRangeAsync(GetMessagesByDateRangeQuery query);
 }
