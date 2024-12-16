@@ -52,6 +52,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseMiddleware<MigrateDatabaseMiddleware>();
 
+app.UseMiddleware<JwtValidationMiddleware>();
+
 app.UseStaticFiles();
 
 app.UseGlobalExceptionHandler();

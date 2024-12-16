@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -13,7 +14,8 @@ namespace Syncify.Services.Services;
 public sealed class TokenService(
     UserManager<ApplicationUser> userManager,
     IOptions<JwtSettings> jwtOptions,
-    IConfiguration configuration) : ITokenService
+    IConfiguration configuration,
+    IHttpContextAccessor contextAccessor) : ITokenService
 {
     private readonly JwtSettings _jwtSettings = jwtOptions.Value;
     private readonly JwtSecurityTokenHandler _jwtSecurityTokenHandler = new();
@@ -24,6 +26,9 @@ public sealed class TokenService(
         var roles = await userManager.GetRolesAsync(user);
 
         var roleClaims = roles.Select(r => new Claim(ClaimTypes.Role, r)).ToList();
+
+        var ipAddress = contextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString();
+        var userAgent = contextAccessor.HttpContext?.Request.Headers["User-Agent"].ToString();
 
         var claims = new[]
         {
@@ -37,7 +42,9 @@ public sealed class TokenService(
             new Claim("ProfilePictureUrl", $"{configuration["BaseApiUrl"]}/Uploads/Images/{user.ProfilePictureUrl}" ?? string.Empty),
             new Claim("CreatedAt", user.CreatedAt.ToString("O")),
             new Claim("Bio", user.Bio ?? string.Empty),
-            new Claim("uid", user.Id)
+            new Claim("uid", user.Id),
+            new Claim("ip", ipAddress!),
+            new Claim("userAgent", userAgent!)
         }
             .Union(userClaims)
             .Union(roleClaims);

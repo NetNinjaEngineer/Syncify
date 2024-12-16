@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication.Google;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -79,17 +78,17 @@ public static class DependencyInjection
                         return Task.CompletedTask;
                     }
                 };
-            })
-            //.AddFacebook(FacebookDefaults.AuthenticationScheme, options =>
-            //{
-            //    options.AppId = authOptions.FacebookOptions.AppId;
-            //    options.AppSecret = authOptions.FacebookOptions.AppSecret;
-            //})
-            .AddGoogle(GoogleDefaults.AuthenticationScheme, options =>
-            {
-                options.ClientId = authOptions.GoogleOptions.ClientId;
-                options.ClientSecret = authOptions.GoogleOptions.ClientSecret;
             });
+        //.AddFacebook(FacebookDefaults.AuthenticationScheme, options =>
+        //{
+        //    options.AppId = authOptions.FacebookOptions.AppId;
+        //    options.AppSecret = authOptions.FacebookOptions.AppSecret;
+        //})
+        //.AddGoogle(GoogleDefaults.AuthenticationScheme, options =>
+        //{
+        //    options.ClientId = authOptions.GoogleOptions.ClientId;
+        //    options.ClientSecret = authOptions.GoogleOptions.ClientSecret;
+        //});
 
 
         services.Configure<SmtpSettings>(configuration.GetSection(nameof(SmtpSettings)));
