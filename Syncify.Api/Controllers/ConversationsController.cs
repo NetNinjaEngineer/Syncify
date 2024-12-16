@@ -1,7 +1,7 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Syncify.Api.Attributes;
 using Syncify.Api.Base;
-using Syncify.Application.Attributes;
 using Syncify.Application.Bases;
 using Syncify.Application.DTOs.Conversation;
 using Syncify.Application.Features.Conversations.Commands.DeleteConversation;

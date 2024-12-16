@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Syncify.Application.Filters;
+using Syncify.Api.Filters;
 
-namespace Syncify.Application.Attributes;
+namespace Syncify.Api.Attributes;
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
 public sealed class ApiKeyAttribute : ServiceFilterAttribute

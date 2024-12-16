@@ -1,7 +1,7 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Syncify.Api.Attributes;
 using Syncify.Api.Base;
-using Syncify.Application.Attributes;
 using Syncify.Application.Bases;
 using Syncify.Application.Features.Followings.Commands.FollowUser;
 using Syncify.Application.Features.Followings.Commands.UnFollowUser;

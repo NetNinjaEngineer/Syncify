@@ -1,10 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.Extensions.Configuration;
-using Syncify.Application.Helpers;
 
-namespace Syncify.Application.Filters;
+namespace Syncify.Api.Filters;
 public sealed class ApiKeyFilter(IConfiguration configuration) : IAsyncAuthorizationFilter
 {
     private const string ApiKeyHeaderName = "X-API-Key";

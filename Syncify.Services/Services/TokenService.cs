@@ -8,6 +8,7 @@ using Syncify.Application.Interfaces.Services;
 using Syncify.Domain.Entities.Identity;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace Syncify.Services.Services;
@@ -28,7 +29,9 @@ public sealed class TokenService(
         var roleClaims = roles.Select(r => new Claim(ClaimTypes.Role, r)).ToList();
 
         var ipAddress = contextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString();
-        var userAgent = contextAccessor.HttpContext?.Request.Headers["User-Agent"].ToString();
+        var userAgent = contextAccessor.HttpContext?.Request.Headers.UserAgent.ToString();
+        var fingerPrint = Convert.ToBase64String(
+            SHA256.HashData(Encoding.UTF8.GetBytes(string.Concat(ipAddress, userAgent))));
 
         var claims = new[]
         {
@@ -36,15 +39,16 @@ public sealed class TokenService(
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new Claim(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
             new Claim(ClaimTypes.NameIdentifier, user.Id),
-            new Claim("FullName", $"{user.FirstName} {user.LastName}".Trim()),
-            new Claim("DateOfBirth", user.DateOfBirth.ToString("yyyy-MM-dd")),
-            new Claim("Gender", user.Gender.ToString()),
-            new Claim("ProfilePictureUrl", $"{configuration["BaseApiUrl"]}/Uploads/Images/{user.ProfilePictureUrl}" ?? string.Empty),
-            new Claim("CreatedAt", user.CreatedAt.ToString("O")),
-            new Claim("Bio", user.Bio ?? string.Empty),
-            new Claim("uid", user.Id),
-            new Claim("ip", ipAddress!),
-            new Claim("userAgent", userAgent!)
+            new Claim(CustomClaims.FullName, $"{user.FirstName} {user.LastName}".Trim()),
+            new Claim(CustomClaims.DateOfBirth, user.DateOfBirth.ToString("yyyy-MM-dd")),
+            new Claim(CustomClaims.Gender, user.Gender.ToString()),
+            new Claim(CustomClaims.ProfilePictureUrl, $"{configuration["BaseApiUrl"]}/Uploads/Images/{user.ProfilePictureUrl}" ?? string.Empty),
+            new Claim(CustomClaims.CreatedAt, user.CreatedAt.ToString("O")),
+            new Claim(CustomClaims.Bio, user.Bio ?? string.Empty),
+            new Claim(CustomClaims.Uid, user.Id),
+            new Claim(CustomClaims.IP, ipAddress!),
+            new Claim(CustomClaims.UserAgent, userAgent!),
+            new Claim(CustomClaims.FingerPrint, fingerPrint)
         }
             .Union(userClaims)
             .Union(roleClaims);

@@ -1,10 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Syncify.Application.Helpers;
 
-namespace Syncify.Application.Filters;
+namespace Syncify.Api.Filters;
 public sealed class GuardFilter(
     IAuthorizationService authorizationService,
     string[]? policies = null,

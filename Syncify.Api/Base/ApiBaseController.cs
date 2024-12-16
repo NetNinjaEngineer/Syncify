@@ -1,6 +1,6 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Syncify.Application.Attributes;
+using Syncify.Api.Attributes;
 using Syncify.Application.Bases;
 using System.Net;
 

@@ -18,7 +18,6 @@ using Syncify.Application.Features.Auth.Commands.SendConfirmEmailCode;
 using Syncify.Application.Features.Auth.Commands.SignInGoogle;
 using Syncify.Application.Features.Auth.Commands.ValidateToken;
 using Syncify.Application.Features.Auth.Commands.Verify2FaCode;
-using Syncify.Application.Helpers;
 using System.Text;
 
 namespace Syncify.Api.Controllers;

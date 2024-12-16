@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http.Features;
 using Syncify.Api.Extensions;
+using Syncify.Api.Filters;
 using Syncify.Api.Middleware;
 using Syncify.Application;
 using Syncify.Application.Hubs;
@@ -12,8 +13,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers()
     .AddJsonOptions(opt => opt.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
-
-builder.Services.AddOpenApi();
 
 builder.Services
     .AddInfrastructureDependencies(builder.Configuration)
@@ -42,13 +41,14 @@ builder.Services.Configure<FormOptions>(options =>
 
 builder.Services.AddScoped<MigrateDatabaseMiddleware>();
 
+builder.Services.AddSingleton<ApiKeyFilter>();
+
+builder.Services.AddSingleton<GuardFilter>();
+
+
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-    app.UseSwaggerDocumentation();
-}
+app.UseSwaggerDocumentation();
 
 app.UseMiddleware<MigrateDatabaseMiddleware>();
 

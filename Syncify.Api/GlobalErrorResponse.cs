@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-namespace Syncify.Application.Helpers;
+namespace Syncify.Api;
 public sealed class GlobalErrorResponse : ProblemDetails
 {
     public string? Message { get; set; }
