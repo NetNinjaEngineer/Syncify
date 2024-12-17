@@ -22,8 +22,6 @@ app.UseSwaggerDocumentation();
 
 app.UseApiMiddlewares();
 
-app.UseMiddleware<JwtValidationMiddleware>();
-
 app.UseStaticFiles();
 
 app.UseGlobalExceptionHandler();
